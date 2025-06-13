@@ -5,24 +5,29 @@ import { Score } from '@/types/quiz';
 import { motion } from 'framer-motion';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import BookmarkedQuestions from './BookmarkedQuestions';
+import { useXPSystem } from '@/hooks/useXPSystem';
+import XPBar from './XPBar';
 
 interface StartScreenProps {
   onStart: () => void;
   scores: Score[];
   soundEnabled: boolean;
   onToggleSound: () => void;
+  totalQuestions: number;
+  unseenQuestionsCount: number;
+  onResetProgress?: () => void;
 }
 
-const StartScreen = React.memo(function StartScreen({ onStart, scores, soundEnabled, onToggleSound }: StartScreenProps) {
+const StartScreen = React.memo(function StartScreen({ onStart, scores, soundEnabled, onToggleSound, totalQuestions, unseenQuestionsCount, onResetProgress }: StartScreenProps) {
   const [mounted, setMounted] = React.useState(false);
   const [showBookmarks, setShowBookmarks] = React.useState(false);
   const { bookmarkCount } = useBookmarks();
+  const { xpData, levelUpAnimation, getNextMilestone } = useXPSystem();
   
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
-  const totalXP = mounted ? scores.reduce((sum, score) => sum + score.score, 0) : 0;
   const lessonsCompleted = mounted ? scores.length : 0;
   
   if (showBookmarks) {
@@ -74,20 +79,26 @@ const StartScreen = React.memo(function StartScreen({ onStart, scores, soundEnab
               </span>
             </motion.button>
           )}
-          {mounted && totalXP > 0 && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-2 text-[#ffc800] font-bold"
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2l2.5 7.5H22l-6.25 4.5L18.25 22 12 17.5 5.75 22l2.5-8L2 9.5h7.5z"/>
-              </svg>
-              <span>{totalXP}</span>
-            </motion.div>
-          )}
+          {/* XP Display moved to XPBar component */}
         </div>
       </div>
+
+      {/* XP Progress Bar */}
+      {mounted && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mb-8 lg:mb-12 px-4"
+        >
+          <XPBar 
+            xpData={xpData} 
+            levelUpAnimation={levelUpAnimation}
+            showMilestone={true}
+            nextMilestone={getNextMilestone()}
+          />
+        </motion.div>
+      )}
 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center space-y-8 lg:space-y-12">
@@ -130,7 +141,13 @@ const StartScreen = React.memo(function StartScreen({ onStart, scores, soundEnab
               3 lives
             </span>
             <span>•</span>
-            <span>121 questions</span>
+            <span>{totalQuestions} questions</span>
+            {unseenQuestionsCount > 0 && (
+              <>
+                <span>•</span>
+                <span className="text-[#58cc02] font-medium">{unseenQuestionsCount} new</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -143,6 +160,21 @@ const StartScreen = React.memo(function StartScreen({ onStart, scores, soundEnab
         >
           START
         </motion.button>
+        
+        {/* Reset progress button - only show if there are seen questions */}
+        {mounted && unseenQuestionsCount < totalQuestions && onResetProgress && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            whileHover={{ scale: 1.05, transition: { duration: 0.1 } }}
+            whileTap={{ scale: 0.95, transition: { duration: 0.05 } }}
+            onClick={onResetProgress}
+            className="text-[#afafaf] hover:text-[#3c3c3c] text-sm font-medium transition-colors"
+          >
+            Reset question progress
+          </motion.button>
+        )}
       </div>
     </motion.div>
   );

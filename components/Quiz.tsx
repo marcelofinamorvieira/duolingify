@@ -6,6 +6,8 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useSound } from '@/hooks/useSound';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { useAnimationTimer } from '@/hooks/useAnimationTimer';
+import { useVisualFeedback } from '@/hooks/useVisualFeedback';
+import { useXPSystem } from '@/hooks/useXPSystem';
 import Header from './Header';
 import StartScreen from './StartScreen';
 import QuizScreen from './QuizScreen';
@@ -47,8 +49,11 @@ export default function Quiz({ questions }: QuizProps) {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   
   const [scores, setScores] = useLocalStorage<Score[]>('networkQuizScores', []);
+  const [seenQuestionIds, setSeenQuestionIds] = useLocalStorage<number[]>('networkQuizSeenQuestions', []);
   const soundEffects = useSound(gameState.soundEnabled);
-  const { vibrate } = useHapticFeedback();
+  const { vibrate, isIOS } = useHapticFeedback();
+  const { showFeedback: showVisualFeedback } = useVisualFeedback();
+  const { addXP } = useXPSystem();
 
   // Enable sounds on first interaction
   useEffect(() => {
@@ -77,11 +82,21 @@ export default function Quiz({ questions }: QuizProps) {
 
 
   const startQuiz = () => {
-    const shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
+    // Separate unseen and seen questions
+    const unseenQuestions = questions.filter(q => !seenQuestionIds.includes(q.id));
+    const seenQuestions = questions.filter(q => seenQuestionIds.includes(q.id));
+    
+    // Shuffle both arrays separately
+    const shuffledUnseen = [...unseenQuestions].sort(() => Math.random() - 0.5);
+    const shuffledSeen = [...seenQuestions].sort(() => Math.random() - 0.5);
+    
+    // Prioritize unseen questions first, then seen questions
+    const prioritizedQuestions = [...shuffledUnseen, ...shuffledSeen];
+    
     setGameState(prev => ({
       ...prev,
-      questions: shuffledQuestions,
-      totalQuestions: shuffledQuestions.length,
+      questions: prioritizedQuestions,
+      totalQuestions: prioritizedQuestions.length,
       currentQuestionIndex: 0,
       score: 0,
       streak: 0,
@@ -97,6 +112,8 @@ export default function Quiz({ questions }: QuizProps) {
     setSelectedAnswer(null);
     setIsCorrect(null);
     resetTimer();
+    // Ensure sounds are enabled on start
+    soundEffects.enableSounds();
     soundEffects.playClick();
   };
 
@@ -137,12 +154,14 @@ export default function Quiz({ questions }: QuizProps) {
       newCorrectAnswers += 1;
       soundEffects.playSuccess();
       vibrate('success');
+      if (isIOS) showVisualFeedback('success');
       
       // Play streak sound for streaks of 3 or more
       if (newStreak >= 3 && newStreak % 3 === 0) {
         setTimeout(() => {
           soundEffects.playStreak();
           vibrate('medium');
+          if (isIOS) showVisualFeedback('success');
         }, 500);
       }
     } else {
@@ -150,6 +169,7 @@ export default function Quiz({ questions }: QuizProps) {
       newLives -= 1;
       soundEffects.playFailure();
       vibrate('error');
+      if (isIOS) showVisualFeedback('error');
     }
 
     setGameState(prev => ({
@@ -161,6 +181,11 @@ export default function Quiz({ questions }: QuizProps) {
       userAnswers: [...prev.userAnswers, userAnswer],
       questionsAnswered: prev.questionsAnswered + 1
     }));
+    
+    // Mark this question as seen
+    if (!seenQuestionIds.includes(question.id)) {
+      setSeenQuestionIds(prev => [...prev, question.id]);
+    }
   };
 
   const nextQuestion = () => {
@@ -178,6 +203,8 @@ export default function Quiz({ questions }: QuizProps) {
       resetTimer();
       }
     soundEffects.playClick();
+    vibrate('light');
+    if (isIOS) showVisualFeedback('click');
   };
 
   const endQuiz = () => {
@@ -202,6 +229,10 @@ export default function Quiz({ questions }: QuizProps) {
     
     setScores(updatedScores);
     
+    // Add XP (score / 10)
+    const xpEarned = Math.round(gameState.score / 10);
+    addXP(xpEarned);
+    
     setGameState(prev => ({
       ...prev,
       timeSpent: totalTime
@@ -210,15 +241,18 @@ export default function Quiz({ questions }: QuizProps) {
     if (gameState.lives <= 0) {
       soundEffects.playGameOver();
       vibrate('heavy');
+      if (isIOS) showVisualFeedback('error');
     } else {
       soundEffects.playLevelComplete();
       vibrate('success');
+      if (isIOS) showVisualFeedback('success');
       
       // Play perfect score sound if they got all questions right
       if (gameState.correctAnswers === gameState.questionsAnswered) {
         setTimeout(() => {
           soundEffects.playPerfect();
           vibrate('success');
+          if (isIOS) showVisualFeedback('success');
         }, 1000);
       }
     }
@@ -237,6 +271,12 @@ export default function Quiz({ questions }: QuizProps) {
       // Play a click sound to confirm it's working
       setTimeout(() => soundEffects.playClick(), 100);
     }
+    vibrate('light');
+  };
+  
+  const resetQuestionProgress = () => {
+    setSeenQuestionIds([]);
+    soundEffects.playClick();
     vibrate('light');
   };
 
@@ -264,6 +304,9 @@ export default function Quiz({ questions }: QuizProps) {
               scores={scores}
               soundEnabled={gameState.soundEnabled}
               onToggleSound={toggleSound}
+              totalQuestions={questions.length}
+              unseenQuestionsCount={questions.filter(q => !seenQuestionIds.includes(q.id)).length}
+              onResetProgress={resetQuestionProgress}
             />
           )}
 

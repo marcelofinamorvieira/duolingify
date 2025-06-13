@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { animationConfig, withGPUAcceleration } from '@/lib/animationConfig';
+import { useXPSystem } from '@/hooks/useXPSystem';
 
 interface HeaderProps {
   lives: number;
@@ -15,6 +16,7 @@ interface HeaderProps {
 }
 
 const Header = React.memo(function Header({ lives, streak, score, onClose, title, onBack }: HeaderProps) {
+  const { xpData } = useXPSystem();
   return (
     <header className="fixed top-0 left-0 right-0 bg-white border-b-2 border-[#e5e5e5] z-50">
       <div className="max-w-xl lg:max-w-5xl mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
@@ -77,12 +79,17 @@ const Header = React.memo(function Header({ lives, streak, score, onClose, title
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-1 text-[#ffc800] font-bold"
+            className="flex items-center gap-3"
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10 0l2.5 7.5H20l-6.25 4.5L16.25 20 10 15.5 3.75 20l2.5-8L0 7.5h7.5z"/>
-            </svg>
-            <span>{score}</span>
+            <div className="flex items-center gap-1 text-[#58cc02] font-bold bg-[#e8f5e8] px-2 py-1 rounded-full text-sm">
+              <span>Lv.{xpData.currentLevel}</span>
+            </div>
+            <div className="flex items-center gap-1 text-[#ffc800] font-bold">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 0l2.5 7.5H20l-6.25 4.5L16.25 20 10 15.5 3.75 20l2.5-8L0 7.5h7.5z"/>
+              </svg>
+              <span>{score}</span>
+            </div>
           </motion.div>
         </div>
       </div>

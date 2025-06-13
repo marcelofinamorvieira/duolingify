@@ -1,7 +1,8 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import Confetti from './Confetti';
 
 interface ResultsScreenProps {
   correctAnswers: number;
@@ -25,6 +26,34 @@ const ResultsScreen = React.memo(function ResultsScreen({
   onPlayAgain
 }: ResultsScreenProps) {
   const xpEarned = Math.round(score / 10);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [animatedXP, setAnimatedXP] = useState(0);
+  
+  useEffect(() => {
+    // Trigger confetti for good performance
+    if (accuracy >= 80 || correctAnswers === totalQuestions) {
+      setTimeout(() => setShowConfetti(true), 500);
+      setTimeout(() => setShowConfetti(false), 600);
+    }
+    
+    // Animate XP counting up
+    const duration = 1000;
+    const steps = 30;
+    const increment = xpEarned / steps;
+    let current = 0;
+    
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= xpEarned) {
+        setAnimatedXP(xpEarned);
+        clearInterval(timer);
+      } else {
+        setAnimatedXP(Math.floor(current));
+      }
+    }, duration / steps);
+    
+    return () => clearInterval(timer);
+  }, [accuracy, correctAnswers, totalQuestions, xpEarned]);
   
   return (
     <motion.div 
@@ -79,7 +108,14 @@ const ResultsScreen = React.memo(function ResultsScreen({
             <svg width="32" height="32" viewBox="0 0 24 24" fill="#ffc800">
               <path d="M12 2l2.5 7.5H22l-6.25 4.5L18.25 22 12 17.5 5.75 22l2.5-8L2 9.5h7.5z"/>
             </svg>
-            <span className="text-4xl lg:text-5xl font-bold text-[#ffc800]">+{xpEarned} XP</span>
+            <motion.span 
+              key={animatedXP}
+              initial={{ scale: 1.2 }}
+              animate={{ scale: 1 }}
+              className="text-4xl lg:text-5xl font-bold text-[#ffc800]"
+            >
+              +{animatedXP} XP
+            </motion.span>
           </div>
           
           <div className="grid grid-cols-3 gap-4 text-center">
@@ -119,6 +155,7 @@ const ResultsScreen = React.memo(function ResultsScreen({
           </motion.button>
         </div>
       </motion.div>
+      <Confetti trigger={showConfetti} />
     </motion.div>
   );
 });

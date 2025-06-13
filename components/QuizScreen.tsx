@@ -325,8 +325,8 @@ const QuizScreen = React.memo(function QuizScreen({
               isCorrect ? 'border-[#58cc02]' : 'border-[#ff4b4b]'
             } px-4 py-4 lg:py-6 safe-area-inset-bottom`}
           >
-            <div className="max-w-xl lg:max-w-3xl mx-auto flex items-center justify-between">
-              <div className="flex-1">
+            <div className="max-w-xl lg:max-w-3xl mx-auto flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0 overflow-y-auto max-h-[30vh] lg:max-h-none">
                 <h2 className={`text-xl lg:text-3xl font-bold mb-0.5 lg:mb-1 ${
                   isCorrect ? 'text-[#58a700]' : 'text-[#ea2b2b]'
                 }`}>
@@ -334,7 +334,7 @@ const QuizScreen = React.memo(function QuizScreen({
                 </h2>
                 <p className={`text-xs lg:text-base ${
                   isCorrect ? 'text-[#58a700]' : 'text-[#ea2b2b]'
-                } opacity-90 line-clamp-2 lg:line-clamp-none`}>
+                } opacity-90`}>
                   {question.explanation}
                 </p>
               </div>
@@ -342,7 +342,7 @@ const QuizScreen = React.memo(function QuizScreen({
                 whileHover={{ scale: 1.05, transition: { duration: 0.1 } }}
                 whileTap={{ scale: 0.95, transition: { duration: 0.05 } }}
                 onClick={onNext}
-                className={`ml-4 px-6 lg:px-10 py-2.5 lg:py-4 rounded-2xl font-bold text-white uppercase tracking-wide shadow-[0_4px_0_rgba(0,0,0,0.2)] active:shadow-[0_2px_0_rgba(0,0,0,0.2)] active:translate-y-[2px] transition-all text-sm lg:text-lg ${
+                className={`ml-4 px-6 lg:px-10 py-2.5 lg:py-4 rounded-2xl font-bold text-white uppercase tracking-wide shadow-[0_4px_0_rgba(0,0,0,0.2)] active:shadow-[0_2px_0_rgba(0,0,0,0.2)] active:translate-y-[2px] transition-all text-sm lg:text-lg flex-shrink-0 ${
                   isCorrect 
                     ? 'bg-[#58cc02] hover:bg-[#58a700]' 
                     : 'bg-[#ff4b4b] hover:bg-[#ea2b2b]'

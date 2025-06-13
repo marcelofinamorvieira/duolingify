@@ -44,6 +44,11 @@ export function useSound(enabled: boolean): SoundEffects {
     const context = audioContextRef.current;
     if (!context) return;
     
+    // Resume context if suspended (common on mobile)
+    if (context.state === 'suspended') {
+      context.resume().catch(console.error);
+    }
+    
     try {
       const oscillator = context.createOscillator();
       const gainNode = context.createGain();
@@ -54,13 +59,19 @@ export function useSound(enabled: boolean): SoundEffects {
       oscillator.type = type;
       oscillator.frequency.setValueAtTime(frequency, context.currentTime);
       
-      // Simple envelope
+      // Improved envelope with attack and decay
       gainNode.gain.setValueAtTime(0, context.currentTime);
-      gainNode.gain.linearRampToValueAtTime(volume, context.currentTime + 0.01);
+      gainNode.gain.linearRampToValueAtTime(volume, context.currentTime + 0.02); // Slower attack
       gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + duration);
       
       oscillator.start(context.currentTime);
       oscillator.stop(context.currentTime + duration);
+      
+      // Clean up after playing
+      oscillator.onended = () => {
+        oscillator.disconnect();
+        gainNode.disconnect();
+      };
     } catch (error) {
       console.error('Error playing sound:', error);
     }
