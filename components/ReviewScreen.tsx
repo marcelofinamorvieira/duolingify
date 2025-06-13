@@ -3,13 +3,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { UserAnswer } from '@/types/quiz';
+import { animationConfig, withGPUAcceleration } from '@/lib/animationConfig';
 
 interface ReviewScreenProps {
   userAnswers: UserAnswer[];
   onBack: () => void;
 }
 
-export default function ReviewScreen({ userAnswers, onBack }: ReviewScreenProps) {
+const ReviewScreen = React.memo(function ReviewScreen({ userAnswers, onBack }: ReviewScreenProps) {
   const incorrectAnswers = userAnswers.filter(answer => !answer.isCorrect);
   
   return (
@@ -20,6 +21,8 @@ export default function ReviewScreen({ userAnswers, onBack }: ReviewScreenProps)
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: animationConfig.duration.normal }}
+          style={withGPUAcceleration()}
           className="bg-[#f7f7f7] rounded-2xl p-4 mb-6 flex items-center justify-around"
         >
           <div className="text-center">
@@ -40,7 +43,8 @@ export default function ReviewScreen({ userAnswers, onBack }: ReviewScreenProps)
               key={index}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ delay: Math.min(index * 0.03, 0.3), duration: animationConfig.duration.normal }}
+              style={withGPUAcceleration()}
               className="bg-white border-2 border-[#e5e5e5] rounded-2xl overflow-hidden"
             >
               {/* Question header */}
@@ -114,9 +118,10 @@ export default function ReviewScreen({ userAnswers, onBack }: ReviewScreenProps)
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            transition={{ delay: 0.3, ...animationConfig.spring }}
+            whileHover={{ scale: 1.05, transition: { duration: animationConfig.duration.fast } }}
+            whileTap={{ scale: 0.95, transition: { duration: animationConfig.duration.instant } }}
+            style={withGPUAcceleration()}
             onClick={onBack}
             className="w-full bg-[#58cc02] hover:bg-[#58a700] text-white px-8 py-4 lg:py-5 rounded-2xl font-bold uppercase tracking-wide shadow-[0_4px_0_#46a302] active:shadow-[0_2px_0_#46a302] active:translate-y-[2px] transition-all lg:text-lg"
           >
@@ -126,4 +131,6 @@ export default function ReviewScreen({ userAnswers, onBack }: ReviewScreenProps)
       </div>
     </div>
   );
-}
+});
+
+export default ReviewScreen;

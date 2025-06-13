@@ -34,7 +34,11 @@ export function useSound(enabled: boolean): SoundEffects {
   }, []);
 
   const playTone = useCallback((frequency: number, duration: number, type: OscillatorType = 'sine', volume: number = 0.3) => {
-    if (!enabled || !soundsEnabledRef.current) return;
+    if (!enabled) return;
+    if (!soundsEnabledRef.current && enabled) {
+      // Auto-enable sounds if not yet enabled
+      soundsEnabledRef.current = true;
+    }
     
     initAudioContext();
     const context = audioContextRef.current;
@@ -68,15 +72,22 @@ export function useSound(enabled: boolean): SoundEffects {
     });
   }, [playTone]);
 
-  const enableSounds = useCallback(() => {
-    initAudioContext();
+  const enableSounds = useCallback(async () => {
     soundsEnabledRef.current = true;
+    initAudioContext();
     
     // Play a silent sound to unlock audio on iOS
     if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume();
+      try {
+        await audioContextRef.current.resume();
+      } catch (error) {
+        console.error('Failed to resume AudioContext:', error);
+      }
     }
-  }, [initAudioContext]);
+    
+    // Play a tiny click to confirm audio is working
+    setTimeout(() => playTone(1000, 0.03, 'sine', 0.1), 100);
+  }, [initAudioContext, playTone]);
 
   // Simple, pleasant sounds
   const playClick = useCallback(() => {

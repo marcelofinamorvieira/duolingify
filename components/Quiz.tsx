@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Question, GameState, UserAnswer, Score } from '@/types/quiz';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useSound } from '@/hooks/useSound';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
+import { useAnimationTimer } from '@/hooks/useAnimationTimer';
 import Header from './Header';
 import StartScreen from './StartScreen';
 import QuizScreen from './QuizScreen';
@@ -59,21 +60,20 @@ export default function Quiz({ questions }: QuizProps) {
     return () => document.removeEventListener('click', handleFirstInteraction);
   }, [soundEffects]);
 
-  // Timer effect
-  useEffect(() => {
-    if (currentScreen === 'quiz' && !showFeedback && timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [timeLeft, currentScreen, showFeedback]);
-
-  // Handle timeout
-  useEffect(() => {
-    if (timeLeft === 0 && !showFeedback && currentScreen === 'quiz') {
+  // Optimized timer with requestAnimationFrame
+  const handleTimeout = useCallback(() => {
+    if (!showFeedback && currentScreen === 'quiz') {
       handleAnswer(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeLeft, showFeedback, currentScreen]);
+  }, [showFeedback, currentScreen]);
+
+  const { reset: resetTimer } = useAnimationTimer({
+    duration: 60,
+    onUpdate: setTimeLeft,
+    onComplete: handleTimeout,
+    isRunning: currentScreen === 'quiz' && !showFeedback
+  });
 
 
   const startQuiz = () => {
@@ -96,6 +96,7 @@ export default function Quiz({ questions }: QuizProps) {
     setShowFeedback(false);
     setSelectedAnswer(null);
     setIsCorrect(null);
+    resetTimer();
     soundEffects.playClick();
   };
 
@@ -174,6 +175,7 @@ export default function Quiz({ questions }: QuizProps) {
       setShowFeedback(false);
       setSelectedAnswer(null);
       setIsCorrect(null);
+      resetTimer();
       }
     soundEffects.playClick();
   };

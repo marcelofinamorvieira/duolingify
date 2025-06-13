@@ -13,7 +13,7 @@ interface StartScreenProps {
   onToggleSound: () => void;
 }
 
-export default function StartScreen({ onStart, scores, soundEnabled, onToggleSound }: StartScreenProps) {
+const StartScreen = React.memo(function StartScreen({ onStart, scores, soundEnabled, onToggleSound }: StartScreenProps) {
   const [mounted, setMounted] = React.useState(false);
   const [showBookmarks, setShowBookmarks] = React.useState(false);
   const { bookmarkCount } = useBookmarks();
@@ -33,13 +33,15 @@ export default function StartScreen({ onStart, scores, soundEnabled, onToggleSou
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      style={{ willChange: 'opacity' }}
       className="w-full max-w-lg lg:max-w-2xl mx-auto px-4 py-8 flex flex-col h-full"
     >
       {/* Duolingo-style header */}
       <div className="flex justify-between items-center mb-8 lg:mb-0">
         <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.05, transition: { duration: 0.1 } }}
+          whileTap={{ scale: 0.95, transition: { duration: 0.05 } }}
           onClick={onToggleSound}
           className="p-2 -m-2"
         >
@@ -93,7 +95,8 @@ export default function StartScreen({ onStart, scores, soundEnabled, onToggleSou
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: "spring", stiffness: 200, damping: 15 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20, mass: 0.5 }}
+          style={{ willChange: 'transform' }}
           className="relative"
         >
           <div className="w-32 h-32 lg:w-40 lg:h-40 bg-[#1cb0f6] rounded-full flex items-center justify-center shadow-lg">
@@ -133,8 +136,8 @@ export default function StartScreen({ onStart, scores, soundEnabled, onToggleSou
 
         {/* Start button */}
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.05, transition: { duration: 0.1 } }}
+          whileTap={{ scale: 0.95, transition: { duration: 0.05 } }}
           onClick={onStart}
           className="bg-[#58cc02] hover:bg-[#58a700] text-white px-12 lg:px-16 py-4 lg:py-5 rounded-2xl font-bold uppercase tracking-wide shadow-[0_4px_0_#46a302] active:shadow-[0_2px_0_#46a302] active:translate-y-[2px] transition-all text-lg lg:text-xl"
         >
@@ -143,4 +146,6 @@ export default function StartScreen({ onStart, scores, soundEnabled, onToggleSou
       </div>
     </motion.div>
   );
-}
+});
+
+export default StartScreen;

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { animationConfig, withGPUAcceleration } from '@/lib/animationConfig';
 
 interface HeaderProps {
   lives: number;
@@ -13,14 +14,15 @@ interface HeaderProps {
   onBack?: () => void;
 }
 
-export default function Header({ lives, streak, score, onClose, title, onBack }: HeaderProps) {
+const Header = React.memo(function Header({ lives, streak, score, onClose, title, onBack }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 right-0 bg-white border-b-2 border-[#e5e5e5] z-50">
       <div className="max-w-xl lg:max-w-5xl mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
         {/* Close/Back button (Duolingo style) */}
         <motion.button 
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.1, transition: { duration: animationConfig.duration.fast } }}
+          whileTap={{ scale: 0.95, transition: { duration: animationConfig.duration.instant } }}
+          style={withGPUAcceleration()}
           onClick={onBack || onClose}
           className="p-2 -m-2 text-[#afafaf] hover:text-[#3c3c3c] transition-colors"
         >
@@ -48,7 +50,8 @@ export default function Header({ lives, streak, score, onClose, title, onBack }:
                   key={i}
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: i * 0.1, type: "spring" }}
+                  transition={{ delay: i * 0.05, ...animationConfig.springFast }}
+                  style={withGPUAcceleration()}
                   className={`w-7 h-7 ${i < lives ? '' : 'opacity-30'}`}
                 >
                   <svg viewBox="0 0 24 24" fill={i < lives ? "#ff4b4b" : "#e5e5e5"}>
@@ -85,4 +88,6 @@ export default function Header({ lives, streak, score, onClose, title, onBack }:
       </div>
     </header>
   );
-}
+});
+
+export default Header;

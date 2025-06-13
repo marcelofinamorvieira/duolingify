@@ -14,7 +14,7 @@ interface ResultsScreenProps {
   onPlayAgain: () => void;
 }
 
-export default function ResultsScreen({
+const ResultsScreen = React.memo(function ResultsScreen({
   correctAnswers,
   totalQuestions,
   accuracy,
@@ -46,9 +46,11 @@ export default function ResultsScreen({
             scale: [1, 1.1, 1]
           }}
           transition={{ 
-            duration: 0.6,
-            delay: 0.3
+            duration: 0.5,
+            delay: 0.2,
+            ease: [0.25, 0.1, 0.25, 1]
           }}
+          style={{ willChange: 'transform' }}
           className="inline-block"
         >
           <div className="w-32 h-32 lg:w-40 lg:h-40 bg-[#ffc800] rounded-full flex items-center justify-center shadow-lg">
@@ -99,8 +101,8 @@ export default function ResultsScreen({
         {/* Action buttons */}
         <div className="space-y-3 pt-4">
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.05, transition: { duration: 0.1 } }}
+            whileTap={{ scale: 0.95, transition: { duration: 0.05 } }}
             onClick={onPlayAgain}
             className="w-full bg-[#58cc02] hover:bg-[#58a700] text-white px-8 py-4 lg:py-5 rounded-2xl font-bold uppercase tracking-wide shadow-[0_4px_0_#46a302] active:shadow-[0_2px_0_#46a302] active:translate-y-[2px] transition-all lg:text-lg"
           >
@@ -108,8 +110,8 @@ export default function ResultsScreen({
           </motion.button>
           
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.02, transition: { duration: 0.1 } }}
+            whileTap={{ scale: 0.98, transition: { duration: 0.05 } }}
             onClick={onReview}
             className="w-full text-[#1cb0f6] font-bold px-6 py-3"
           >
@@ -119,4 +121,6 @@ export default function ResultsScreen({
       </motion.div>
     </motion.div>
   );
-}
+});
+
+export default ResultsScreen;

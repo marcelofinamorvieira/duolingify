@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Question } from '@/types/quiz';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBookmarks } from '@/hooks/useBookmarks';
@@ -20,7 +20,7 @@ interface QuizScreenProps {
   soundEnabled: boolean;
 }
 
-export default function QuizScreen({
+const QuizScreen = React.memo(function QuizScreen({
   question,
   questionNumber,
   totalQuestions,
@@ -31,23 +31,46 @@ export default function QuizScreen({
   selectedAnswer,
   soundEnabled
 }: QuizScreenProps) {
-  const options = Object.entries(question.options).filter(([, value]) => value);
-  const [isMobile, setIsMobile] = useState(false);
+  const options = useMemo(() => 
+    Object.entries(question.options).filter(([, value]) => value),
+    [question.options]
+  );
+  // const [isMobile, setIsMobile] = useState(false);
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const { playBookmark, enableSounds } = useSound(soundEnabled);
   const { vibrate } = useHapticFeedback();
   const [bookmarkAnimating, setBookmarkAnimating] = useState(false);
+  const correctAnswerRef = useRef<HTMLButtonElement>(null);
+  
+  // Performance optimizations
+  const springConfig = useMemo(() => ({ 
+    type: "spring" as const, 
+    damping: 25, 
+    stiffness: 400,
+    mass: 0.5
+  }), []);
+
+  // Auto-scroll to correct answer on mobile when wrong answer is selected
+  useEffect(() => {
+    if (showFeedback && !isCorrect && correctAnswerRef.current) {
+      // Delay to allow animations to start
+      setTimeout(() => {
+        correctAnswerRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }, 300);
+    }
+  }, [showFeedback, isCorrect]);
+  
+  const progressTransition = useMemo(() => ({ 
+    duration: 0.3, 
+    ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] // Custom cubic-bezier for smoother animation
+  }), []);
   const [showParticles, setShowParticles] = useState(false);
   const [prevQuestionNumber, setPrevQuestionNumber] = useState(questionNumber);
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  // Removed mobile check - not used after optimization
 
   // Detect when progress bar should grow and trigger particles
   useEffect(() => {
@@ -71,7 +94,8 @@ export default function QuizScreen({
             className="h-full bg-[#58cc02] relative rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${(questionNumber / totalQuestions) * 100}%` }}
-            transition={{ duration: isMobile ? 0.3 : 0.5, ease: "easeOut" }}
+            transition={progressTransition}
+            style={{ willChange: 'width' }}
           >
             {/* Particle burst effect when progress bar grows */}
             <AnimatePresence>
@@ -103,16 +127,18 @@ export default function QuizScreen({
                           opacity: 0
                         }}
                         transition={{
-                          duration: 0.4,
-                          delay: i * 0.01,
-                          ease: "easeOut"
+                          duration: 0.3,
+                          delay: i * 0.005,
+                          ease: [0.25, 0.1, 0.25, 1]
                         }}
                         style={{
                           width: `${size}px`,
                           height: `${size}px`,
                           right: '2px',
-                          filter: 'blur(0.5px)',
-                          boxShadow: '0 0 6px rgba(88, 204, 2, 0.6)'
+                          willChange: 'transform, opacity',
+                          transform: 'translateZ(0)', // Force GPU acceleration
+                          backfaceVisibility: 'hidden',
+                          perspective: 1000
                         }}
                       />
                     );
@@ -143,8 +169,8 @@ export default function QuizScreen({
                         width: '3px',
                         height: '3px',
                         right: '2px',
-                        filter: 'blur(0px)',
-                        boxShadow: '0 0 4px rgba(255, 255, 255, 0.8)'
+                        willChange: 'transform, opacity',
+                        transform: 'translateZ(0)'
                       }}
                     />
                   ))}
@@ -165,7 +191,9 @@ export default function QuizScreen({
                     }}
                     style={{
                       filter: 'blur(10px)',
-                      right: '-8px'
+                      right: '-8px',
+                      willChange: 'transform, opacity',
+                      transform: 'translateZ(0)'
                     }}
                   />
                 </div>
@@ -182,6 +210,8 @@ export default function QuizScreen({
             key={question.question}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+            style={{ willChange: 'transform, opacity' }}
             className="text-2xl lg:text-3xl font-bold text-[#3c3c3c] mb-8 lg:mb-12 leading-tight pr-12"
           >
             {question.question}
@@ -227,15 +257,22 @@ export default function QuizScreen({
         <div className="space-y-3 lg:space-y-4">
           {options.map(([letter, text]) => (
             <motion.button
+              ref={letter === question.correctAnswer ? correctAnswerRef : null}
               key={letter}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              whileHover={!showFeedback ? { scale: 1.02 } : {}}
-              whileTap={!showFeedback ? { scale: 0.98 } : {}}
-              onClick={() => {
+              whileHover={!showFeedback ? { scale: 1.02, transition: { duration: 0.1 } } : {}}
+              whileTap={!showFeedback ? { scale: 0.98, transition: { duration: 0.05 } } : {}}
+              onClick={(event) => {
                 if (!showFeedback) {
                   onAnswer(letter);
                   vibrate('selection');
+                  // Add visual pulse for devices without haptics
+                  const button = event.currentTarget;
+                  button.style.transform = 'scale(0.95)';
+                  setTimeout(() => {
+                    button.style.transform = '';
+                  }, 100);
                 }
               }}
               disabled={showFeedback}
@@ -280,31 +317,32 @@ export default function QuizScreen({
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            transition={springConfig}
+            style={{ willChange: 'transform' }}
             className={`fixed bottom-0 left-0 right-0 ${
               isCorrect ? 'bg-[#d7ffb8]' : 'bg-[#ffdfe0]'
             } border-t-4 ${
               isCorrect ? 'border-[#58cc02]' : 'border-[#ff4b4b]'
-            } px-4 py-6`}
+            } px-4 py-4 lg:py-6 safe-area-inset-bottom`}
           >
             <div className="max-w-xl lg:max-w-3xl mx-auto flex items-center justify-between">
               <div className="flex-1">
-                <h2 className={`text-2xl lg:text-3xl font-bold mb-1 ${
+                <h2 className={`text-xl lg:text-3xl font-bold mb-0.5 lg:mb-1 ${
                   isCorrect ? 'text-[#58a700]' : 'text-[#ea2b2b]'
                 }`}>
                   {isCorrect ? 'Great job!' : 'Oops, that\'s not right'}
                 </h2>
-                <p className={`text-sm lg:text-base ${
+                <p className={`text-xs lg:text-base ${
                   isCorrect ? 'text-[#58a700]' : 'text-[#ea2b2b]'
-                } opacity-90`}>
+                } opacity-90 line-clamp-2 lg:line-clamp-none`}>
                   {question.explanation}
                 </p>
               </div>
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.05, transition: { duration: 0.1 } }}
+                whileTap={{ scale: 0.95, transition: { duration: 0.05 } }}
                 onClick={onNext}
-                className={`ml-4 px-8 lg:px-10 py-3 lg:py-4 rounded-2xl font-bold text-white uppercase tracking-wide shadow-[0_4px_0_rgba(0,0,0,0.2)] active:shadow-[0_2px_0_rgba(0,0,0,0.2)] active:translate-y-[2px] transition-all lg:text-lg ${
+                className={`ml-4 px-6 lg:px-10 py-2.5 lg:py-4 rounded-2xl font-bold text-white uppercase tracking-wide shadow-[0_4px_0_rgba(0,0,0,0.2)] active:shadow-[0_2px_0_rgba(0,0,0,0.2)] active:translate-y-[2px] transition-all text-sm lg:text-lg ${
                   isCorrect 
                     ? 'bg-[#58cc02] hover:bg-[#58a700]' 
                     : 'bg-[#ff4b4b] hover:bg-[#ea2b2b]'
@@ -318,4 +356,6 @@ export default function QuizScreen({
       </AnimatePresence>
     </div>
   );
-}
+});
+
+export default QuizScreen;
