@@ -1,8 +1,11 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Question } from '@/types/quiz';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useBookmarks } from '@/hooks/useBookmarks';
+import { useSound } from '@/hooks/useSound';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 
 interface QuizScreenProps {
   question: Question;
@@ -14,6 +17,7 @@ interface QuizScreenProps {
   showFeedback: boolean;
   isCorrect: boolean | null;
   selectedAnswer: string | null;
+  soundEnabled: boolean;
 }
 
 export default function QuizScreen({
@@ -24,34 +28,200 @@ export default function QuizScreen({
   onNext,
   showFeedback,
   isCorrect,
-  selectedAnswer
+  selectedAnswer,
+  soundEnabled
 }: QuizScreenProps) {
   const options = Object.entries(question.options).filter(([, value]) => value);
+  const [isMobile, setIsMobile] = useState(false);
+  const { isBookmarked, toggleBookmark } = useBookmarks();
+  const { playBookmark, enableSounds } = useSound(soundEnabled);
+  const { vibrate } = useHapticFeedback();
+  const [bookmarkAnimating, setBookmarkAnimating] = useState(false);
+  const [showParticles, setShowParticles] = useState(false);
+  const [prevQuestionNumber, setPrevQuestionNumber] = useState(questionNumber);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Detect when progress bar should grow and trigger particles
+  useEffect(() => {
+    if (questionNumber > prevQuestionNumber) {
+      setShowParticles(true);
+      setPrevQuestionNumber(questionNumber);
+      // Hide particles after animation completes
+      const timer = setTimeout(() => {
+        setShowParticles(false);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [questionNumber, prevQuestionNumber]);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="h-full bg-white flex flex-col">
       {/* Duolingo-style progress bar */}
-      <div className="w-full h-4 bg-[#e5e5e5] relative">
-        <motion.div 
-          className="h-full bg-[#58cc02] relative"
-          initial={{ width: 0 }}
-          animate={{ width: `${(questionNumber / totalQuestions) * 100}%` }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-        >
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-6 bg-[#58cc02] rounded-full shadow-md" />
-        </motion.div>
+      <div className="w-full px-6 lg:px-10 pt-4 pb-2">
+        <div className="w-full h-5 md:h-4 bg-[#e5e5e5] rounded-full relative overflow-hidden">
+          <motion.div 
+            className="h-full bg-[#58cc02] relative rounded-full"
+            initial={{ width: 0 }}
+            animate={{ width: `${(questionNumber / totalQuestions) * 100}%` }}
+            transition={{ duration: isMobile ? 0.3 : 0.5, ease: "easeOut" }}
+          >
+            {/* Particle burst effect when progress bar grows */}
+            <AnimatePresence>
+              {showParticles && (
+                <div className="absolute right-0 top-0 h-full w-32 pointer-events-none overflow-visible">
+                  {/* Create 20 particles for a more impressive burst */}
+                  {Array.from({ length: 20 }).map((_, i) => {
+                    const angle = (Math.PI * 2 * i) / 20 + Math.random() * 0.5;
+                    const velocity = 30 + Math.random() * 40;
+                    const size = 2 + Math.random() * 3;
+                    
+                    return (
+                      <motion.div
+                        key={`particle-${i}`}
+                        className="absolute bg-[#58cc02] rounded-full"
+                        initial={{ 
+                          x: 0, 
+                          y: 10,
+                          opacity: 1,
+                          scale: 0
+                        }}
+                        animate={{ 
+                          x: Math.cos(angle) * velocity,
+                          y: Math.sin(angle) * velocity + 20,
+                          opacity: [1, 1, 0],
+                          scale: [0, 1.2, 0.8]
+                        }}
+                        exit={{
+                          opacity: 0
+                        }}
+                        transition={{
+                          duration: 0.4,
+                          delay: i * 0.01,
+                          ease: "easeOut"
+                        }}
+                        style={{
+                          width: `${size}px`,
+                          height: `${size}px`,
+                          right: '2px',
+                          filter: 'blur(0.5px)',
+                          boxShadow: '0 0 6px rgba(88, 204, 2, 0.6)'
+                        }}
+                      />
+                    );
+                  })}
+                  {/* Additional sparkle particles */}
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <motion.div
+                      key={`sparkle-${i}`}
+                      className="absolute bg-white rounded-full"
+                      initial={{ 
+                        x: 0, 
+                        y: 10,
+                        opacity: 0.8,
+                        scale: 0
+                      }}
+                      animate={{ 
+                        x: (Math.random() - 0.5) * 60,
+                        y: (Math.random() - 0.5) * 60,
+                        opacity: [0.8, 1, 0],
+                        scale: [0, 0.8, 0]
+                      }}
+                      transition={{
+                        duration: 0.3,
+                        delay: i * 0.015,
+                        ease: "easeOut"
+                      }}
+                      style={{
+                        width: '3px',
+                        height: '3px',
+                        right: '2px',
+                        filter: 'blur(0px)',
+                        boxShadow: '0 0 4px rgba(255, 255, 255, 0.8)'
+                      }}
+                    />
+                  ))}
+                  {/* Glow burst effect */}
+                  <motion.div
+                    className="absolute right-0 top-1/2 -translate-y-1/2 w-16 h-16 bg-[#58cc02] rounded-full"
+                    initial={{
+                      opacity: 0.8,
+                      scale: 0
+                    }}
+                    animate={{
+                      opacity: [0.8, 0],
+                      scale: [0, 2.5]
+                    }}
+                    transition={{
+                      duration: 0.3,
+                      ease: "easeOut"
+                    }}
+                    style={{
+                      filter: 'blur(10px)',
+                      right: '-8px'
+                    }}
+                  />
+                </div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </div>
       </div>
 
-      <div className="max-w-xl lg:max-w-3xl mx-auto px-4 lg:px-8 pt-12 pb-32">
-        {/* Question with Duolingo styling */}
-        <motion.h1 
-          key={question.question}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-2xl lg:text-3xl font-bold text-[#3c3c3c] mb-8 lg:mb-12 leading-tight"
-        >
-          {question.question}
-        </motion.h1>
+      <div className="flex-1 overflow-y-auto max-w-xl lg:max-w-3xl mx-auto px-4 lg:px-8 pt-8 pb-32 w-full">
+        {/* Question with Duolingo styling and bookmark button */}
+        <div className="relative">
+          <motion.h1 
+            key={question.question}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-2xl lg:text-3xl font-bold text-[#3c3c3c] mb-8 lg:mb-12 leading-tight pr-12"
+          >
+            {question.question}
+          </motion.h1>
+          
+          {/* Bookmark button */}
+          <motion.button
+            onClick={() => {
+              enableSounds(); // Ensure sounds are enabled
+              toggleBookmark(question);
+              if (soundEnabled) {
+                playBookmark();
+              }
+              vibrate('light');
+              setBookmarkAnimating(true);
+              setTimeout(() => setBookmarkAnimating(false), 300);
+            }}
+            className="absolute top-0 right-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <motion.svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill={isBookmarked(question.id) ? "#fbbf24" : "none"}
+              stroke={isBookmarked(question.id) ? "#fbbf24" : "#9ca3af"}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              animate={bookmarkAnimating ? {
+                scale: [1, 1.3, 1],
+                rotate: [0, -10, 10, -10, 0]
+              } : {}}
+              transition={{ duration: 0.3 }}
+            >
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+            </motion.svg>
+          </motion.button>
+        </div>
 
         {/* Options with Duolingo card style */}
         <div className="space-y-3 lg:space-y-4">
@@ -62,7 +232,12 @@ export default function QuizScreen({
               animate={{ opacity: 1, x: 0 }}
               whileHover={!showFeedback ? { scale: 1.02 } : {}}
               whileTap={!showFeedback ? { scale: 0.98 } : {}}
-              onClick={() => !showFeedback && onAnswer(letter)}
+              onClick={() => {
+                if (!showFeedback) {
+                  onAnswer(letter);
+                  vibrate('selection');
+                }
+              }}
               disabled={showFeedback}
               className={`w-full p-4 lg:p-5 rounded-2xl border-2 transition-all duration-200 text-left font-medium relative overflow-hidden ${
                 showFeedback && letter === question.correctAnswer

@@ -30,7 +30,7 @@ export default function ResultsScreen({
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="w-full max-w-lg lg:max-w-2xl mx-auto px-4 py-8 min-h-screen flex flex-col items-center justify-center"
+      className="w-full max-w-lg lg:max-w-2xl mx-auto px-4 py-8 flex flex-col items-center justify-center"
     >
       {/* Duolingo-style celebration */}
       <motion.div

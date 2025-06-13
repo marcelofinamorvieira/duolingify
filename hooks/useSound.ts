@@ -6,8 +6,18 @@ interface SoundEffects {
   playFailure: () => void;
   playLevelComplete: () => void;
   playGameOver: () => void;
+  playStreak: () => void;
+  playPerfect: () => void;
+  playBookmark: () => void;
   enableSounds: () => void;
 }
+
+// Use base64 encoded sounds for reliability
+const SOUNDS = {
+  click: 'data:audio/wav;base64,UklGRkQCAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YSACAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==',
+  success: 'data:audio/wav;base64,UklGRkQCAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YSACAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==',
+  failure: 'data:audio/wav;base64,UklGRkQCAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YSACAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==',
+};
 
 export function useSound(enabled: boolean): SoundEffects {
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -15,46 +25,62 @@ export function useSound(enabled: boolean): SoundEffects {
 
   const initAudioContext = useCallback(() => {
     if (!audioContextRef.current && typeof window !== 'undefined') {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      try {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      } catch (error) {
+        console.error('Failed to create AudioContext:', error);
+      }
     }
   }, []);
 
   const playTone = useCallback((frequency: number, duration: number, type: OscillatorType = 'sine', volume: number = 0.3) => {
-    if (!enabled || !soundsEnabledRef.current || !audioContextRef.current) return;
+    if (!enabled || !soundsEnabledRef.current) return;
+    
+    initAudioContext();
+    const context = audioContextRef.current;
+    if (!context) return;
     
     try {
-      const oscillator = audioContextRef.current.createOscillator();
-      const gainNode = audioContextRef.current.createGain();
+      const oscillator = context.createOscillator();
+      const gainNode = context.createGain();
       
       oscillator.connect(gainNode);
-      gainNode.connect(audioContextRef.current.destination);
+      gainNode.connect(context.destination);
       
       oscillator.type = type;
-      oscillator.frequency.setValueAtTime(frequency, audioContextRef.current.currentTime);
+      oscillator.frequency.setValueAtTime(frequency, context.currentTime);
       
-      gainNode.gain.setValueAtTime(volume, audioContextRef.current.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContextRef.current.currentTime + duration);
+      // Simple envelope
+      gainNode.gain.setValueAtTime(0, context.currentTime);
+      gainNode.gain.linearRampToValueAtTime(volume, context.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + duration);
       
-      oscillator.start(audioContextRef.current.currentTime);
-      oscillator.stop(audioContextRef.current.currentTime + duration);
+      oscillator.start(context.currentTime);
+      oscillator.stop(context.currentTime + duration);
     } catch (error) {
       console.error('Error playing sound:', error);
     }
-  }, [enabled]);
+  }, [enabled, initAudioContext]);
 
-  const playSequence = useCallback((notes: Array<{frequency: number, duration: number, delay: number}>, type: OscillatorType = 'sine') => {
+  const playSequence = useCallback((notes: Array<{frequency: number, duration: number, delay: number}>) => {
     notes.forEach(note => {
-      setTimeout(() => playTone(note.frequency, note.duration, type), note.delay * 1000);
+      setTimeout(() => playTone(note.frequency, note.duration), note.delay * 1000);
     });
   }, [playTone]);
 
   const enableSounds = useCallback(() => {
     initAudioContext();
     soundsEnabledRef.current = true;
+    
+    // Play a silent sound to unlock audio on iOS
+    if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume();
+    }
   }, [initAudioContext]);
 
+  // Simple, pleasant sounds
   const playClick = useCallback(() => {
-    playTone(800, 0.1, 'sine', 0.2);
+    playTone(1000, 0.05, 'sine', 0.2);
   }, [playTone]);
 
   const playSuccess = useCallback(() => {
@@ -62,39 +88,64 @@ export function useSound(enabled: boolean): SoundEffects {
       { frequency: 523, duration: 0.1, delay: 0 },    // C5
       { frequency: 659, duration: 0.1, delay: 0.1 },  // E5
       { frequency: 784, duration: 0.1, delay: 0.2 },  // G5
-      { frequency: 1047, duration: 0.3, delay: 0.3 }  // C6
-    ], 'sine');
+      { frequency: 1047, duration: 0.2, delay: 0.3 }  // C6
+    ]);
   }, [playSequence]);
 
   const playFailure = useCallback(() => {
     playSequence([
-      { frequency: 440, duration: 0.2, delay: 0 },    // A4
-      { frequency: 415, duration: 0.2, delay: 0.1 },  // G#4
-      { frequency: 392, duration: 0.2, delay: 0.2 },  // G4
-      { frequency: 349, duration: 0.4, delay: 0.3 }   // F4
-    ], 'sawtooth');
+      { frequency: 440, duration: 0.15, delay: 0 },   // A4
+      { frequency: 392, duration: 0.15, delay: 0.1 }, // G4
+      { frequency: 349, duration: 0.2, delay: 0.2 }   // F4
+    ]);
   }, [playSequence]);
 
   const playLevelComplete = useCallback(() => {
     playSequence([
-      { frequency: 523, duration: 0.15, delay: 0 },    // C5
-      { frequency: 587, duration: 0.15, delay: 0.15 }, // D5
+      { frequency: 523, duration: 0.1, delay: 0 },     // C5
+      { frequency: 523, duration: 0.1, delay: 0.1 },   // C5
+      { frequency: 523, duration: 0.1, delay: 0.2 },   // C5
       { frequency: 659, duration: 0.15, delay: 0.3 },  // E5
-      { frequency: 698, duration: 0.15, delay: 0.45 }, // F5
-      { frequency: 784, duration: 0.15, delay: 0.6 },  // G5
-      { frequency: 880, duration: 0.15, delay: 0.75 }, // A5
-      { frequency: 988, duration: 0.15, delay: 0.9 },  // B5
-      { frequency: 1047, duration: 0.4, delay: 1.05 }  // C6
-    ], 'triangle');
+      { frequency: 784, duration: 0.15, delay: 0.45 }, // G5
+      { frequency: 1047, duration: 0.3, delay: 0.6 }   // C6
+    ]);
   }, [playSequence]);
 
   const playGameOver = useCallback(() => {
     playSequence([
-      { frequency: 349, duration: 0.3, delay: 0 },    // F4
-      { frequency: 330, duration: 0.3, delay: 0.3 },  // E4
-      { frequency: 294, duration: 0.3, delay: 0.6 },  // D4
-      { frequency: 262, duration: 0.6, delay: 0.9 }   // C4
-    ], 'square');
+      { frequency: 392, duration: 0.2, delay: 0 },    // G4
+      { frequency: 349, duration: 0.2, delay: 0.2 },  // F4
+      { frequency: 330, duration: 0.2, delay: 0.4 },  // E4
+      { frequency: 294, duration: 0.3, delay: 0.6 }   // D4
+    ]);
+  }, [playSequence]);
+
+  const playStreak = useCallback(() => {
+    playSequence([
+      { frequency: 880, duration: 0.08, delay: 0 },     // A5
+      { frequency: 1174, duration: 0.08, delay: 0.08 }, // D6
+      { frequency: 1397, duration: 0.1, delay: 0.16 },  // F6
+      { frequency: 1760, duration: 0.15, delay: 0.24 }  // A6
+    ]);
+  }, [playSequence]);
+
+  const playPerfect = useCallback(() => {
+    playSequence([
+      { frequency: 1047, duration: 0.08, delay: 0 },    // C6
+      { frequency: 1319, duration: 0.08, delay: 0.05 }, // E6
+      { frequency: 1568, duration: 0.08, delay: 0.1 },  // G6
+      { frequency: 2093, duration: 0.08, delay: 0.15 }, // C7
+      { frequency: 2637, duration: 0.08, delay: 0.2 },  // E7
+      { frequency: 3136, duration: 0.2, delay: 0.25 }   // G7
+    ]);
+  }, [playSequence]);
+
+  const playBookmark = useCallback(() => {
+    playSequence([
+      { frequency: 659, duration: 0.08, delay: 0 },     // E5
+      { frequency: 988, duration: 0.08, delay: 0.08 },  // B5
+      { frequency: 1319, duration: 0.12, delay: 0.16 }  // E6
+    ]);
   }, [playSequence]);
 
   useEffect(() => {
@@ -111,6 +162,9 @@ export function useSound(enabled: boolean): SoundEffects {
     playFailure,
     playLevelComplete,
     playGameOver,
+    playStreak,
+    playPerfect,
+    playBookmark,
     enableSounds
   };
 }

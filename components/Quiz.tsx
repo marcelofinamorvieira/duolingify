@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Question, GameState, UserAnswer, Score } from '@/types/quiz';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useSound } from '@/hooks/useSound';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import Header from './Header';
 import StartScreen from './StartScreen';
 import QuizScreen from './QuizScreen';
@@ -46,6 +47,7 @@ export default function Quiz({ questions }: QuizProps) {
   
   const [scores, setScores] = useLocalStorage<Score[]>('networkQuizScores', []);
   const soundEffects = useSound(gameState.soundEnabled);
+  const { vibrate } = useHapticFeedback();
 
   // Enable sounds on first interaction
   useEffect(() => {
@@ -133,10 +135,20 @@ export default function Quiz({ questions }: QuizProps) {
       newStreak += 1;
       newCorrectAnswers += 1;
       soundEffects.playSuccess();
+      vibrate('success');
+      
+      // Play streak sound for streaks of 3 or more
+      if (newStreak >= 3 && newStreak % 3 === 0) {
+        setTimeout(() => {
+          soundEffects.playStreak();
+          vibrate('medium');
+        }, 500);
+      }
     } else {
       newStreak = 0;
       newLives -= 1;
       soundEffects.playFailure();
+      vibrate('error');
     }
 
     setGameState(prev => ({
@@ -195,34 +207,55 @@ export default function Quiz({ questions }: QuizProps) {
 
     if (gameState.lives <= 0) {
       soundEffects.playGameOver();
+      vibrate('heavy');
     } else {
       soundEffects.playLevelComplete();
+      vibrate('success');
+      
+      // Play perfect score sound if they got all questions right
+      if (gameState.correctAnswers === gameState.questionsAnswered) {
+        setTimeout(() => {
+          soundEffects.playPerfect();
+          vibrate('success');
+        }, 1000);
+      }
     }
 
     setCurrentScreen('results');
   };
 
   const toggleSound = () => {
-    setGameState(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }));
-    soundEffects.playClick();
+    const newSoundEnabled = !gameState.soundEnabled;
+    setGameState(prev => ({ ...prev, soundEnabled: newSoundEnabled }));
+    
+    // Always enable the sound system when toggling
+    soundEffects.enableSounds();
+    
+    if (newSoundEnabled) {
+      // Play a click sound to confirm it's working
+      setTimeout(() => soundEffects.playClick(), 100);
+    }
+    vibrate('light');
   };
 
   const currentQuestion = gameState.questions[gameState.currentQuestionIndex];
   const progress = `${gameState.questionsAnswered}/${gameState.totalQuestions}`;
 
   return (
-    <div className="min-h-screen bg-white flex flex-col lg:max-w-6xl lg:mx-auto lg:shadow-xl">
+    <div className="h-screen bg-white flex flex-col lg:max-w-5xl lg:mx-auto lg:shadow-xl overflow-hidden">
       {currentScreen !== 'start' && (
         <Header
           lives={gameState.lives}
           streak={gameState.streak}
           score={gameState.score}
           progress={progress}
-          onClose={() => setCurrentScreen('start')}
+          onClose={currentScreen === 'review' ? undefined : () => setCurrentScreen('start')}
+          onBack={currentScreen === 'review' ? () => setCurrentScreen('results') : undefined}
+          title={currentScreen === 'review' ? 'Review Answers' : undefined}
         />
       )}
 
-      <main className={`flex-1 ${currentScreen === 'quiz' ? '' : 'flex items-center justify-center'} ${currentScreen !== 'start' ? 'pt-16' : ''} lg:pt-20`}>
+      <main className={`flex-1 overflow-y-auto ${currentScreen === 'quiz' ? '' : 'flex items-center justify-center'} ${currentScreen !== 'start' ? 'pt-16 lg:pt-20' : ''}`}>
           {currentScreen === 'start' && (
             <StartScreen
               onStart={startQuiz}
@@ -243,6 +276,7 @@ export default function Quiz({ questions }: QuizProps) {
               showFeedback={showFeedback}
               isCorrect={isCorrect}
               selectedAnswer={selectedAnswer}
+              soundEnabled={gameState.soundEnabled}
             />
           )}
 

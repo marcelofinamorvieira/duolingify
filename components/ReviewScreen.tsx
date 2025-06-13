@@ -13,28 +13,9 @@ export default function ReviewScreen({ userAnswers, onBack }: ReviewScreenProps)
   const incorrectAnswers = userAnswers.filter(answer => !answer.isCorrect);
   
   return (
-    <div className="min-h-screen bg-white">
-      {/* Duolingo-style header */}
-      <header className="sticky top-0 bg-white border-b-2 border-[#e5e5e5] z-10">
-        <div className="max-w-xl lg:max-w-3xl mx-auto px-4 lg:px-8 py-4 flex items-center justify-between">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={onBack}
-            className="p-2 -m-2 text-[#afafaf] hover:text-[#3c3c3c]"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </motion.button>
-          
-          <h1 className="text-xl lg:text-2xl font-bold text-[#3c3c3c]">Review Answers</h1>
-          
-          <div className="w-10" /> {/* Spacer for centering */}
-        </div>
-      </header>
-
-      <div className="max-w-xl lg:max-w-3xl mx-auto px-4 lg:px-8 py-6">
+    <div className="h-full bg-white flex flex-col">
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-xl lg:max-w-3xl mx-auto px-4 lg:px-8 py-6">
         {/* Summary stats */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -124,18 +105,24 @@ export default function ReviewScreen({ userAnswers, onBack }: ReviewScreenProps)
           ))}
         </div>
 
-        {/* Bottom action */}
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onBack}
-          className="w-full mt-8 bg-[#58cc02] hover:bg-[#58a700] text-white px-8 py-4 lg:py-5 rounded-2xl font-bold uppercase tracking-wide shadow-[0_4px_0_#46a302] active:shadow-[0_2px_0_#46a302] active:translate-y-[2px] transition-all lg:text-lg"
-        >
-          DONE
-        </motion.button>
+        </div>
+      </div>
+      
+      {/* Fixed bottom action */}
+      <div className="border-t-2 border-[#e5e5e5] bg-white p-4">
+        <div className="max-w-xl lg:max-w-3xl mx-auto">
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onBack}
+            className="w-full bg-[#58cc02] hover:bg-[#58a700] text-white px-8 py-4 lg:py-5 rounded-2xl font-bold uppercase tracking-wide shadow-[0_4px_0_#46a302] active:shadow-[0_2px_0_#46a302] active:translate-y-[2px] transition-all lg:text-lg"
+          >
+            DONE
+          </motion.button>
+        </div>
       </div>
     </div>
   );

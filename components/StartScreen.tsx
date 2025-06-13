@@ -3,6 +3,8 @@
 import React from 'react';
 import { Score } from '@/types/quiz';
 import { motion } from 'framer-motion';
+import { useBookmarks } from '@/hooks/useBookmarks';
+import BookmarkedQuestions from './BookmarkedQuestions';
 
 interface StartScreenProps {
   onStart: () => void;
@@ -13,6 +15,8 @@ interface StartScreenProps {
 
 export default function StartScreen({ onStart, scores, soundEnabled, onToggleSound }: StartScreenProps) {
   const [mounted, setMounted] = React.useState(false);
+  const [showBookmarks, setShowBookmarks] = React.useState(false);
+  const { bookmarkCount } = useBookmarks();
   
   React.useEffect(() => {
     setMounted(true);
@@ -20,15 +24,19 @@ export default function StartScreen({ onStart, scores, soundEnabled, onToggleSou
 
   const totalXP = mounted ? scores.reduce((sum, score) => sum + score.score, 0) : 0;
   const lessonsCompleted = mounted ? scores.length : 0;
+  
+  if (showBookmarks) {
+    return <BookmarkedQuestions onClose={() => setShowBookmarks(false)} />;
+  }
 
   return (
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="w-full max-w-lg lg:max-w-2xl mx-auto px-4 py-8 min-h-screen flex flex-col"
+      className="w-full max-w-lg lg:max-w-2xl mx-auto px-4 py-8 flex flex-col h-full"
     >
       {/* Duolingo-style header */}
-      <div className="flex justify-between items-center mb-12">
+      <div className="flex justify-between items-center mb-8 lg:mb-0">
         <motion.div
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -48,6 +56,22 @@ export default function StartScreen({ onStart, scores, soundEnabled, onToggleSou
         </motion.div>
         
         <div className="flex items-center gap-3">
+          {/* Bookmarks button */}
+          {mounted && bookmarkCount > 0 && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowBookmarks(true)}
+              className="relative p-2 -m-2"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" strokeWidth="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+              </svg>
+              <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                {bookmarkCount}
+              </span>
+            </motion.button>
+          )}
           {mounted && totalXP > 0 && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -64,7 +88,7 @@ export default function StartScreen({ onStart, scores, soundEnabled, onToggleSou
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col items-center justify-center space-y-12">
+      <div className="flex-1 flex flex-col items-center justify-center space-y-8 lg:space-y-12">
         {/* Lesson icon */}
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
@@ -88,14 +112,14 @@ export default function StartScreen({ onStart, scores, soundEnabled, onToggleSou
         </motion.div>
 
         {/* Title and description */}
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-4">
           <h1 className="text-3xl lg:text-4xl font-bold text-[#3c3c3c]">
             Network Basics
           </h1>
           <p className="text-[#afafaf] text-lg lg:text-xl">
             Master computer networking concepts
           </p>
-          <div className="flex items-center justify-center gap-4 text-sm text-[#afafaf]">
+          <div className="flex items-center justify-center gap-4 text-sm lg:text-base text-[#afafaf]">
             <span className="flex items-center gap-1">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff4b4b">
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
