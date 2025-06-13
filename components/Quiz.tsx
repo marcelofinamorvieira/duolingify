@@ -6,7 +6,6 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useSound } from '@/hooks/useSound';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { useAnimationTimer } from '@/hooks/useAnimationTimer';
-import { useVisualFeedback } from '@/hooks/useVisualFeedback';
 import { useXPSystem } from '@/hooks/useXPSystem';
 import Header from './Header';
 import StartScreen from './StartScreen';
@@ -51,8 +50,7 @@ export default function Quiz({ questions }: QuizProps) {
   const [scores, setScores] = useLocalStorage<Score[]>('networkQuizScores', []);
   const [seenQuestionIds, setSeenQuestionIds] = useLocalStorage<number[]>('networkQuizSeenQuestions', []);
   const soundEffects = useSound(gameState.soundEnabled);
-  const { vibrate, isIOS } = useHapticFeedback();
-  const { showFeedback: showVisualFeedback } = useVisualFeedback();
+  const { vibrate } = useHapticFeedback();
   const { addXP } = useXPSystem();
 
   // Enable sounds on first interaction
@@ -60,9 +58,14 @@ export default function Quiz({ questions }: QuizProps) {
     const handleFirstInteraction = () => {
       soundEffects.enableSounds();
       document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
     };
     document.addEventListener('click', handleFirstInteraction);
-    return () => document.removeEventListener('click', handleFirstInteraction);
+    document.addEventListener('touchstart', handleFirstInteraction);
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+    };
   }, [soundEffects]);
 
   // Optimized timer with requestAnimationFrame
@@ -154,14 +157,12 @@ export default function Quiz({ questions }: QuizProps) {
       newCorrectAnswers += 1;
       soundEffects.playSuccess();
       vibrate('success');
-      if (isIOS) showVisualFeedback('success');
       
       // Play streak sound for streaks of 3 or more
       if (newStreak >= 3 && newStreak % 3 === 0) {
         setTimeout(() => {
           soundEffects.playStreak();
           vibrate('medium');
-          if (isIOS) showVisualFeedback('success');
         }, 500);
       }
     } else {
@@ -169,7 +170,6 @@ export default function Quiz({ questions }: QuizProps) {
       newLives -= 1;
       soundEffects.playFailure();
       vibrate('error');
-      if (isIOS) showVisualFeedback('error');
     }
 
     setGameState(prev => ({
@@ -204,7 +204,6 @@ export default function Quiz({ questions }: QuizProps) {
       }
     soundEffects.playClick();
     vibrate('light');
-    if (isIOS) showVisualFeedback('click');
   };
 
   const endQuiz = () => {
@@ -241,18 +240,15 @@ export default function Quiz({ questions }: QuizProps) {
     if (gameState.lives <= 0) {
       soundEffects.playGameOver();
       vibrate('heavy');
-      if (isIOS) showVisualFeedback('error');
     } else {
       soundEffects.playLevelComplete();
       vibrate('success');
-      if (isIOS) showVisualFeedback('success');
       
       // Play perfect score sound if they got all questions right
       if (gameState.correctAnswers === gameState.questionsAnswered) {
         setTimeout(() => {
           soundEffects.playPerfect();
           vibrate('success');
-          if (isIOS) showVisualFeedback('success');
         }, 1000);
       }
     }

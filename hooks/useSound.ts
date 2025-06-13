@@ -12,16 +12,10 @@ interface SoundEffects {
   enableSounds: () => void;
 }
 
-// Use base64 encoded sounds for reliability
-const SOUNDS = {
-  click: 'data:audio/wav;base64,UklGRkQCAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YSACAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==',
-  success: 'data:audio/wav;base64,UklGRkQCAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YSACAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==',
-  failure: 'data:audio/wav;base64,UklGRkQCAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YSACAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==',
-};
-
 export function useSound(enabled: boolean): SoundEffects {
   const audioContextRef = useRef<AudioContext | null>(null);
   const soundsEnabledRef = useRef(false);
+  const hasUserInteracted = useRef(false);
 
   const initAudioContext = useCallback(() => {
     if (!audioContextRef.current && typeof window !== 'undefined') {
@@ -33,22 +27,7 @@ export function useSound(enabled: boolean): SoundEffects {
     }
   }, []);
 
-  const playTone = useCallback((frequency: number, duration: number, type: OscillatorType = 'sine', volume: number = 0.3) => {
-    if (!enabled) return;
-    if (!soundsEnabledRef.current && enabled) {
-      // Auto-enable sounds if not yet enabled
-      soundsEnabledRef.current = true;
-    }
-    
-    initAudioContext();
-    const context = audioContextRef.current;
-    if (!context) return;
-    
-    // Resume context if suspended (common on mobile)
-    if (context.state === 'suspended') {
-      context.resume().catch(console.error);
-    }
-    
+  const playToneInternal = (context: AudioContext, frequency: number, duration: number, type: OscillatorType, volume: number) => {
     try {
       const oscillator = context.createOscillator();
       const gainNode = context.createGain();
@@ -75,6 +54,35 @@ export function useSound(enabled: boolean): SoundEffects {
     } catch (error) {
       console.error('Error playing sound:', error);
     }
+  };
+
+  const playTone = useCallback((frequency: number, duration: number, type: OscillatorType = 'sine', volume: number = 0.3) => {
+    if (!enabled) return;
+    
+    // Don't play sound if user hasn't interacted yet
+    if (!hasUserInteracted.current) {
+      return;
+    }
+    
+    if (!soundsEnabledRef.current && enabled) {
+      // Auto-enable sounds if not yet enabled
+      soundsEnabledRef.current = true;
+    }
+    
+    initAudioContext();
+    const context = audioContextRef.current;
+    if (!context) return;
+    
+    // Resume context if suspended (common on mobile)
+    if (context.state === 'suspended') {
+      context.resume().then(() => {
+        // Retry playing the tone after resuming
+        playToneInternal(context, frequency, duration, type, volume);
+      }).catch(console.error);
+      return;
+    }
+    
+    playToneInternal(context, frequency, duration, type, volume);
   }, [enabled, initAudioContext]);
 
   const playSequence = useCallback((notes: Array<{frequency: number, duration: number, delay: number}>) => {
@@ -85,20 +93,36 @@ export function useSound(enabled: boolean): SoundEffects {
 
   const enableSounds = useCallback(async () => {
     soundsEnabledRef.current = true;
+    hasUserInteracted.current = true;
     initAudioContext();
     
-    // Play a silent sound to unlock audio on iOS
-    if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
-      try {
-        await audioContextRef.current.resume();
-      } catch (error) {
-        console.error('Failed to resume AudioContext:', error);
-      }
-    }
+    const context = audioContextRef.current;
+    if (!context) return;
     
-    // Play a tiny click to confirm audio is working
-    setTimeout(() => playTone(1000, 0.03, 'sine', 0.1), 100);
-  }, [initAudioContext, playTone]);
+    // Create and play a silent buffer to unlock audio on mobile
+    try {
+      // Create an empty buffer
+      const buffer = context.createBuffer(1, 1, 22050);
+      const source = context.createBufferSource();
+      source.buffer = buffer;
+      source.connect(context.destination);
+      source.start(0);
+      
+      // Resume context if suspended
+      if (context.state === 'suspended') {
+        await context.resume();
+      }
+      
+      // Play a tiny click to confirm audio is working
+      setTimeout(() => {
+        if (enabled) {
+          playTone(1000, 0.03, 'sine', 0.1);
+        }
+      }, 100);
+    } catch (error) {
+      console.error('Failed to enable sounds:', error);
+    }
+  }, [initAudioContext, playTone, enabled]);
 
   // Simple, pleasant sounds
   const playClick = useCallback(() => {
