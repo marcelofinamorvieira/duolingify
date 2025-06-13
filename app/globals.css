@@ -1,26 +1,103 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* Duolingo Design System */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Primary Colors */
+  --duo-green: #58cc02;
+  --duo-green-dark: #58a700;
+  --duo-blue: #1cb0f6;
+  --duo-red: #ff4b4b;
+  --duo-yellow: #ffc800;
+  --duo-purple: #ce82ff;
+  
+  /* Neutrals */
+  --duo-white: #ffffff;
+  --duo-gray-light: #e5e5e5;
+  --duo-gray: #afafaf;
+  --duo-gray-dark: #4b4b4b;
+  --duo-black: #3c3c3c;
+  
+  /* Background */
+  --duo-bg: #ffffff;
+  --duo-bg-secondary: #f7f7f7;
+  
+  /* Typography */
+  --duo-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--duo-bg);
+  color: var(--duo-black);
+  font-family: var(--duo-font);
+}
+
+/* Desktop background pattern */
+@media (min-width: 1024px) {
+  body {
+    background-color: #fafafa;
+    background-image: 
+      radial-gradient(circle at 25% 25%, #f0f0f0 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, #f0f0f0 0%, transparent 50%);
+  }
+  
+  .min-h-screen {
+    background-color: white;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.05);
+  }
+}
+
+/* Duolingo Button Style */
+.duo-button {
+  @apply font-bold rounded-2xl transition-all duration-150;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+}
+
+.duo-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2);
+}
+
+.duo-button:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Progress Bar Animation */
+@keyframes progress-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+/* Correct Answer Animation */
+@keyframes correct-bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Wrong Answer Shake */
+@keyframes wrong-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+/* Remove focus outlines */
+*:focus {
+  outline: none;
+}
+
+/* Minimal scrollbar */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
