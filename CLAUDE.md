@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a gamified quiz application for Computer Networks topics built with:
+This is a generic Duolingo-style gamified quiz application built with:
 - Next.js 15.3.3 (App Router)
 - TypeScript (strict mode)
 - React 19
@@ -27,7 +27,7 @@ npm run lint     # Run ESLint
 ## Architecture
 
 ### Core Data Flow
-1. Questions are loaded from `/data/questions.ts` or `/lib/questions.json`
+1. Questions are imported via JSON through the JSONInput component
 2. Game state is managed in the main Quiz component (`/components/Quiz.tsx`)
 3. User progress persists via `useLocalStorage` hook
 4. API routes in `/app/api/questions/` are planned but not yet implemented
@@ -54,7 +54,7 @@ npm run lint     # Run ESLint
 - **Timer**: 60-second countdown per question
 - **Streaks**: Track consecutive correct answers
 - **Sound Effects**: Toggle on/off, files in `/public/sounds/`
-- **Categories**: Questions grouped by topic (e.g., TCP/IP, Security, HTTP)
+- **Categories**: Questions grouped by topic (customizable per subject)
 - **Difficulty**: Each question has a difficulty level affecting scoring
 - **XP System**: Experience points for correct answers and streaks
 - **Bookmarks**: Save questions for later review
@@ -103,3 +103,10 @@ Currently no test framework is configured. Consider adding tests when implementi
   - Reduce cognitive load with intuitive design
   - Encourage daily practice and skill building
   - Create a sense of progress and accomplishment
+
+## Question Data Format
+Questions follow a specific JSON structure (see `/json.md` for detailed documentation):
+- Required fields: id, question, options (A-D), correctAnswer, explanation, category, difficulty
+- Categories are fully customizable based on your subject matter
+- Difficulty levels: "easy", "medium", "hard"
+- Questions can be imported via the JSONInput component

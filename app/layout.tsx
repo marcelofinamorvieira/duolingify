@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Computer Networks Quiz - PoliTO",
-  description: "Master networking concepts through 121 interactive questions",
+  title: "Duolingo-Style Quiz App",
+  description: "Master any subject through gamified interactive quizzes",
   icons: {
     icon: "/favicon.ico",
   },

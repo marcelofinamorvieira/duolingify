@@ -1,6 +1,6 @@
 # JSON Question Format Documentation
 
-This document describes the expected JSON format for importing questions into the Computer Networks Quiz application.
+This document describes the expected JSON format for importing questions into the Duolingo-Style Quiz application.
 
 ## JSON Structure
 
@@ -68,19 +68,14 @@ The JSON file must contain an array of question objects. Each question object mu
 
 ## Example Categories
 
-Common categories used in computer networking quizzes:
-- Network Access Control
-- Transport Layer
-- Application Layer
-- Network Layer
-- Physical Layer
-- IP Addressing
-- Routing Protocols
-- Network Security
-- Wireless Networks
-- Network Topologies
-- DNS and DHCP
-- HTTP and Web Technologies
+Categories can be customized based on your subject matter. Examples:
+- Mathematics: Algebra, Geometry, Calculus, Statistics
+- Science: Biology, Chemistry, Physics, Earth Science
+- History: Ancient History, World Wars, American History, European History
+- Languages: Grammar, Vocabulary, Literature, Conversation
+- Computer Science: Algorithms, Data Structures, Programming, Databases
+- Geography: Countries, Capitals, Physical Geography, Climate
+- Arts: Music Theory, Art History, Film Studies, Literature
 
 ## Complete Example
 

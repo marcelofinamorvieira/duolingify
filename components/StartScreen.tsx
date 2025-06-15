@@ -125,7 +125,7 @@ const StartScreen = React.memo(function StartScreen({ onStart, scores, soundEnab
           className="relative"
         >
           <div className="w-32 h-32 lg:w-40 lg:h-40 bg-[#1cb0f6] rounded-full flex items-center justify-center shadow-lg">
-            <span className="text-6xl lg:text-7xl">🌐</span>
+            <span className="text-6xl lg:text-7xl">🎯</span>
           </div>
           {mounted && lessonsCompleted > 0 && (
             <motion.div
@@ -142,12 +142,12 @@ const StartScreen = React.memo(function StartScreen({ onStart, scores, soundEnab
         {/* Title and description */}
         <div className="text-center space-y-4">
           <h1 className="text-3xl lg:text-4xl font-bold text-[#3c3c3c]">
-            Network Basics
+            Quiz Challenge
           </h1>
           <p className="text-[#afafaf] text-lg lg:text-xl">
             {totalQuestions === 0 
               ? "Import questions to get started" 
-              : "Master computer networking concepts"}
+              : "Master any subject through gamified learning"}
           </p>
           {totalQuestions > 0 && (
             <div className="flex items-center justify-center gap-4 text-sm lg:text-base text-[#afafaf]">

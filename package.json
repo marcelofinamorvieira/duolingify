@@ -1,6 +1,7 @@
 {
-  "name": "quiz-app",
+  "name": "duolingo-style-quiz",
   "version": "0.1.0",
+  "description": "A gamified quiz application inspired by Duolingo for any subject",
   "private": true,
   "scripts": {
     "dev": "next dev",
