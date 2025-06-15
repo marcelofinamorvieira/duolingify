@@ -25,8 +25,6 @@ export interface GameState {
   startTime: number | null;
   questionStartTime: number | null;
   timeSpent: number;
-  timer: NodeJS.Timeout | null;
-  timeLimit: number;
   soundEnabled: boolean;
   lives: number;
   maxLives: number;

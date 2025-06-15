@@ -11,7 +11,6 @@ interface QuizScreenProps {
   question: Question;
   questionNumber: number;
   totalQuestions: number;
-  timeLeft: number;
   onAnswer: (answer: string) => void;
   onNext: () => void;
   showFeedback: boolean;

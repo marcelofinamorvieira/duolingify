@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1001,
+    "question": "Which layer of the OSI model is responsible for end-to-end communication?",
+    "options": {
+      "A": "Physical Layer",
+      "B": "Data Link Layer",
+      "C": "Transport Layer",
+      "D": "Application Layer"
+    },
+    "correctAnswer": "C",
+    "explanation": "The Transport Layer (Layer 4) provides end-to-end communication services for applications, including reliability, flow control, and error correction.",
+    "category": "OSI Model",
+    "difficulty": "medium"
+  },
+  {
+    "id": 1002,
+    "question": "What is the purpose of the ARP protocol?",
+    "options": {
+      "A": "Convert IP addresses to MAC addresses",
+      "B": "Convert MAC addresses to IP addresses",
+      "C": "Route packets between networks",
+      "D": "Encrypt network traffic"
+    },
+    "correctAnswer": "A",
+    "explanation": "ARP (Address Resolution Protocol) is used to map IP addresses to MAC addresses on a local network segment.",
+    "category": "Network Protocols",
+    "difficulty": "easy"
+  },
+  {
+    "id": 1003,
+    "question": "In CIDR notation, what does /24 represent?",
+    "options": {
+      "A": "24 available hosts",
+      "B": "24-bit subnet mask",
+      "C": "24 networks",
+      "D": "24 broadcast domains"
+    },
+    "correctAnswer": "B",
+    "explanation": "The /24 in CIDR notation represents a 24-bit subnet mask (255.255.255.0), which leaves 8 bits for host addresses.",
+    "category": "IP Addressing",
+    "difficulty": "medium"
+  }
+]

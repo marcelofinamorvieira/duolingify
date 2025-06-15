@@ -9,7 +9,6 @@ interface ResultsScreenProps {
   totalQuestions: number;
   accuracy: number;
   timeSpent: number;
-  score: number;
   message: string;
   onReview: () => void;
   onPlayAgain: () => void;
@@ -20,14 +19,11 @@ const ResultsScreen = React.memo(function ResultsScreen({
   totalQuestions,
   accuracy,
   timeSpent,
-  score,
   message,
   onReview,
   onPlayAgain
 }: ResultsScreenProps) {
-  const xpEarned = Math.round(score / 10);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [animatedXP, setAnimatedXP] = useState(0);
   
   useEffect(() => {
     // Trigger confetti for good performance
@@ -35,25 +31,7 @@ const ResultsScreen = React.memo(function ResultsScreen({
       setTimeout(() => setShowConfetti(true), 500);
       setTimeout(() => setShowConfetti(false), 600);
     }
-    
-    // Animate XP counting up
-    const duration = 1000;
-    const steps = 30;
-    const increment = xpEarned / steps;
-    let current = 0;
-    
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= xpEarned) {
-        setAnimatedXP(xpEarned);
-        clearInterval(timer);
-      } else {
-        setAnimatedXP(Math.floor(current));
-      }
-    }, duration / steps);
-    
-    return () => clearInterval(timer);
-  }, [accuracy, correctAnswers, totalQuestions, xpEarned]);
+  }, [accuracy, correctAnswers, totalQuestions]);
   
   return (
     <motion.div 
@@ -97,27 +75,13 @@ const ResultsScreen = React.memo(function ResultsScreen({
           </p>
         </div>
 
-        {/* XP Earned */}
+        {/* Stats */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="bg-[#fff3d0] rounded-2xl p-6 lg:p-8 space-y-4"
+          className="bg-[#f0f0f0] rounded-2xl p-6 lg:p-8"
         >
-          <div className="flex items-center justify-center gap-3">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="#ffc800">
-              <path d="M12 2l2.5 7.5H22l-6.25 4.5L18.25 22 12 17.5 5.75 22l2.5-8L2 9.5h7.5z"/>
-            </svg>
-            <motion.span 
-              key={animatedXP}
-              initial={{ scale: 1.2 }}
-              animate={{ scale: 1 }}
-              className="text-4xl lg:text-5xl font-bold text-[#ffc800]"
-            >
-              +{animatedXP} XP
-            </motion.span>
-          </div>
-          
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-2xl font-bold text-[#3c3c3c]">{accuracy}%</p>

@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from 'react';
 import Quiz from '@/components/Quiz';
-import { questions } from '@/data/questions';
+import { Question } from '@/types/quiz';
 
 export default function Home() {
-  return <Quiz questions={questions} />;
+  const [questions, setQuestions] = useState<Question[]>([]);
+
+  return <Quiz questions={questions} onQuestionsChange={setQuestions} />;
 }

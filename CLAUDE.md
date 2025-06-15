@@ -10,6 +10,7 @@ This is a gamified quiz application for Computer Networks topics built with:
 - React 19
 - Tailwind CSS v3.4.0
 - Framer Motion v12.18.1 (for animations)
+- Howler.js v2.2.4 (for sound effects)
 
 ## Development Commands
 
@@ -29,7 +30,7 @@ npm run lint     # Run ESLint
 1. Questions are loaded from `/data/questions.ts` or `/lib/questions.json`
 2. Game state is managed in the main Quiz component (`/components/Quiz.tsx`)
 3. User progress persists via `useLocalStorage` hook
-4. API routes in `/app/api/questions/` handle question data
+4. API routes in `/app/api/questions/` are planned but not yet implemented
 
 ### Key Type Definitions (`/types/quiz.ts`)
 - `Question`: Quiz question with options, explanation, category, and difficulty
@@ -40,6 +41,7 @@ npm run lint     # Run ESLint
 ### Component Structure
 - `Quiz.tsx`: Main container managing game flow
 - `StartScreen.tsx` → `QuizScreen.tsx` → `ResultsScreen.tsx` → `ReviewScreen.tsx`
+- Additional components: `Header.tsx`, `XPBar.tsx`, `Confetti.tsx`, `BookmarkedQuestions.tsx`
 - Game features: lives system, timer, streaks, sound effects
 
 ### State Management
@@ -54,6 +56,9 @@ npm run lint     # Run ESLint
 - **Sound Effects**: Toggle on/off, files in `/public/sounds/`
 - **Categories**: Questions grouped by topic (e.g., TCP/IP, Security, HTTP)
 - **Difficulty**: Each question has a difficulty level affecting scoring
+- **XP System**: Experience points for correct answers and streaks
+- **Bookmarks**: Save questions for later review
+- **Haptic Feedback**: Mobile vibration support
 
 ### Project Structure
 ```
@@ -61,8 +66,8 @@ npm run lint     # Run ESLint
   /api/questions  # Question data endpoints
 /components       # React components
 /data            # Question data (questions.ts)
-/hooks           # Custom hooks (useLocalStorage, useSound)
-/lib             # Utilities and alternative data (questions.json)
+/hooks           # Custom hooks (useLocalStorage, useSound, useXPSystem, useBookmarks, useHapticFeedback, useAnimationTimer)
+/lib             # Utilities (animationConfig.ts) and alternative data (questions.json)
 /types           # TypeScript definitions
 /public          # Static assets (sounds, SVGs)
 ```
@@ -73,9 +78,10 @@ npm run lint     # Run ESLint
 - No implicit any allowed
 
 ### Styling
-- Tailwind CSS with custom configuration
+- Tailwind CSS v3.4.0 with standard configuration
 - Global styles in `/app/globals.css`
 - Responsive design patterns throughout
+- Framer Motion for animations (configured in `/lib/animationConfig.ts`)
 
 ### No Testing Infrastructure
 Currently no test framework is configured. Consider adding tests when implementing new features.

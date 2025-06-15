@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Question, GameState, UserAnswer, Score } from '@/types/quiz';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useSound } from '@/hooks/useSound';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
-import { useAnimationTimer } from '@/hooks/useAnimationTimer';
-import { useXPSystem } from '@/hooks/useXPSystem';
 import Header from './Header';
 import StartScreen from './StartScreen';
 import QuizScreen from './QuizScreen';
@@ -15,12 +13,13 @@ import ReviewScreen from './ReviewScreen';
 
 interface QuizProps {
   questions: Question[];
+  onQuestionsChange?: (questions: Question[]) => void;
 }
 
 type Screen = 'start' | 'quiz' | 'results' | 'review';
 
 
-export default function Quiz({ questions }: QuizProps) {
+export default function Quiz({ questions, onQuestionsChange }: QuizProps) {
   const [currentScreen, setCurrentScreen] = useState<Screen>('start');
   const [gameState, setGameState] = useState<GameState>({
     questions: [],
@@ -34,15 +33,12 @@ export default function Quiz({ questions }: QuizProps) {
     startTime: null,
     questionStartTime: null,
     timeSpent: 0,
-    timer: null,
-    timeLimit: 60,
     soundEnabled: true,
     lives: 3,
     maxLives: 3,
     questionsAnswered: 0
   });
 
-  const [timeLeft, setTimeLeft] = useState(60);
   const [showFeedback, setShowFeedback] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -51,7 +47,6 @@ export default function Quiz({ questions }: QuizProps) {
   const [seenQuestionIds, setSeenQuestionIds] = useLocalStorage<number[]>('networkQuizSeenQuestions', []);
   const soundEffects = useSound(gameState.soundEnabled);
   const { vibrate } = useHapticFeedback();
-  const { addXP } = useXPSystem();
 
   // Enable sounds on first interaction
   useEffect(() => {
@@ -68,20 +63,6 @@ export default function Quiz({ questions }: QuizProps) {
     };
   }, [soundEffects]);
 
-  // Optimized timer with requestAnimationFrame
-  const handleTimeout = useCallback(() => {
-    if (!showFeedback && currentScreen === 'quiz') {
-      handleAnswer(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showFeedback, currentScreen]);
-
-  const { reset: resetTimer } = useAnimationTimer({
-    duration: 60,
-    onUpdate: setTimeLeft,
-    onComplete: handleTimeout,
-    isRunning: currentScreen === 'quiz' && !showFeedback
-  });
 
 
   const startQuiz = () => {
@@ -110,11 +91,9 @@ export default function Quiz({ questions }: QuizProps) {
       questionsAnswered: 0
     }));
     setCurrentScreen('quiz');
-    setTimeLeft(60);
     setShowFeedback(false);
     setSelectedAnswer(null);
     setIsCorrect(null);
-    resetTimer();
     // Ensure sounds are enabled on start
     soundEffects.enableSounds();
     soundEffects.playClick();
@@ -131,7 +110,9 @@ export default function Quiz({ questions }: QuizProps) {
   const handleAnswer = (answer: string | null) => {
     const question = gameState.questions[gameState.currentQuestionIndex];
     const correct = answer === question.correctAnswer;
-    const timeSpent = 60 - timeLeft;
+    const timeSpent = gameState.questionStartTime 
+      ? Math.floor((Date.now() - gameState.questionStartTime) / 1000)
+      : 0;
     
     setSelectedAnswer(answer);
     setIsCorrect(correct);
@@ -194,13 +175,12 @@ export default function Quiz({ questions }: QuizProps) {
     } else {
       setGameState(prev => ({
         ...prev,
-        currentQuestionIndex: prev.currentQuestionIndex + 1
+        currentQuestionIndex: prev.currentQuestionIndex + 1,
+        questionStartTime: Date.now()
       }));
-      setTimeLeft(60);
       setShowFeedback(false);
       setSelectedAnswer(null);
       setIsCorrect(null);
-      resetTimer();
       }
     soundEffects.playClick();
     vibrate('light');
@@ -227,10 +207,6 @@ export default function Quiz({ questions }: QuizProps) {
       .slice(0, 10);
     
     setScores(updatedScores);
-    
-    // Add XP (score / 10)
-    const xpEarned = Math.round(gameState.score / 10);
-    addXP(xpEarned);
     
     setGameState(prev => ({
       ...prev,
@@ -303,6 +279,7 @@ export default function Quiz({ questions }: QuizProps) {
               totalQuestions={questions.length}
               unseenQuestionsCount={questions.filter(q => !seenQuestionIds.includes(q.id)).length}
               onResetProgress={resetQuestionProgress}
+              onQuestionsChange={onQuestionsChange}
             />
           )}
 
@@ -311,7 +288,6 @@ export default function Quiz({ questions }: QuizProps) {
               question={currentQuestion}
               questionNumber={gameState.currentQuestionIndex + 1}
               totalQuestions={gameState.totalQuestions}
-              timeLeft={timeLeft}
               onAnswer={handleAnswer}
               onNext={nextQuestion}
               showFeedback={showFeedback}
@@ -329,7 +305,6 @@ export default function Quiz({ questions }: QuizProps) {
                 ? Math.round((gameState.correctAnswers / gameState.questionsAnswered) * 100)
                 : 0}
               timeSpent={gameState.timeSpent}
-              score={gameState.score}
               message={
                 gameState.lives <= 0
                   ? `Game Over! You ran out of lives after ${gameState.questionsAnswered} questions.`
