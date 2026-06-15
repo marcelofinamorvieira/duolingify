@@ -90,7 +90,7 @@ export default function BookmarkedQuestions({ onSelectQuestion, onClose }: Bookm
                         </button>
                       </div>
                       <p className="text-sm text-gray-600 mb-2">
-                        <span className="font-semibold">Correct Answer:</span> {question.correctAnswer} - {question.options[question.correctAnswer as keyof typeof question.options]}
+                        <span className="font-semibold">Correct Answer:</span> {question.correctAnswer} - {question.options[question.correctAnswer]}
                       </p>
                       <p className="text-sm text-gray-500 italic">{question.explanation}</p>
                       <div className="flex items-center gap-3 mt-3">

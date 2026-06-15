@@ -12,6 +12,11 @@ interface SoundEffects {
   enableSounds: () => void;
 }
 
+type AudioContextWindow = Window &
+  typeof globalThis & {
+    webkitAudioContext?: typeof AudioContext;
+  };
+
 export function useSound(enabled: boolean): SoundEffects {
   const audioContextRef = useRef<AudioContext | null>(null);
   const soundsEnabledRef = useRef(false);
@@ -20,7 +25,11 @@ export function useSound(enabled: boolean): SoundEffects {
   const initAudioContext = useCallback(() => {
     if (!audioContextRef.current && typeof window !== 'undefined') {
       try {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const AudioContextConstructor = window.AudioContext || (window as AudioContextWindow).webkitAudioContext;
+        if (!AudioContextConstructor) {
+          return;
+        }
+        audioContextRef.current = new AudioContextConstructor();
       } catch (error) {
         console.error('Failed to create AudioContext:', error);
       }

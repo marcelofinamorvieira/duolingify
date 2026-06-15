@@ -8,6 +8,7 @@ interface ConfettiPiece {
   rotation: number;
   color: string;
   size: number;
+  borderRadius: string;
   velocity: {
     x: number;
     y: number;
@@ -39,6 +40,7 @@ export default function Confetti({ trigger, duration = 3000, particleCount = 50 
         rotation: Math.random() * 360,
         color: colors[Math.floor(Math.random() * colors.length)],
         size: Math.random() * 10 + 5,
+        borderRadius: Math.random() > 0.5 ? '50%' : '0%',
         velocity: {
           x: (Math.random() - 0.5) * 10,
           y: Math.random() * 5 + 10,
@@ -47,13 +49,18 @@ export default function Confetti({ trigger, duration = 3000, particleCount = 50 
       });
     }
     
-    setPieces(newPieces);
-    
+    const showTimeout = setTimeout(() => {
+      setPieces(newPieces);
+    }, 0);
+
     const timeout = setTimeout(() => {
       setPieces([]);
     }, duration);
     
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(showTimeout);
+      clearTimeout(timeout);
+    };
   }, [trigger, duration, particleCount]);
 
   return (
@@ -83,7 +90,7 @@ export default function Confetti({ trigger, duration = 3000, particleCount = 50 
             width: piece.size,
             height: piece.size,
             backgroundColor: piece.color,
-            borderRadius: Math.random() > 0.5 ? '50%' : '0%'
+            borderRadius: piece.borderRadius
           }}
         />
       ))}

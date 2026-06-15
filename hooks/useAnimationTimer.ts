@@ -17,31 +17,31 @@ export function useAnimationTimer({
   const rafIdRef = useRef<number | null>(null);
   const lastUpdateRef = useRef<number>(duration);
 
-  const animate = useCallback((timestamp: number) => {
-    if (!startTimeRef.current) {
-      startTimeRef.current = timestamp;
-    }
-
-    const elapsed = timestamp - startTimeRef.current;
-    const timeLeft = Math.max(0, duration - Math.floor(elapsed / 1000));
-
-    // Only update if the second has changed
-    if (timeLeft !== lastUpdateRef.current) {
-      lastUpdateRef.current = timeLeft;
-      onUpdate(timeLeft);
-
-      if (timeLeft === 0 && onComplete) {
-        onComplete();
-        return;
-      }
-    }
-
-    if (isRunning && timeLeft > 0) {
-      rafIdRef.current = requestAnimationFrame(animate);
-    }
-  }, [duration, onUpdate, onComplete, isRunning]);
-
   useEffect(() => {
+    const animate = (timestamp: number) => {
+      if (!startTimeRef.current) {
+        startTimeRef.current = timestamp;
+      }
+
+      const elapsed = timestamp - startTimeRef.current;
+      const timeLeft = Math.max(0, duration - Math.floor(elapsed / 1000));
+
+      // Only update if the second has changed
+      if (timeLeft !== lastUpdateRef.current) {
+        lastUpdateRef.current = timeLeft;
+        onUpdate(timeLeft);
+
+        if (timeLeft === 0 && onComplete) {
+          onComplete();
+          return;
+        }
+      }
+
+      if (isRunning && timeLeft > 0) {
+        rafIdRef.current = requestAnimationFrame(animate);
+      }
+    };
+
     if (isRunning) {
       // Reset refs when starting
       startTimeRef.current = null;
@@ -57,7 +57,7 @@ export function useAnimationTimer({
         cancelAnimationFrame(rafIdRef.current);
       }
     };
-  }, [isRunning, animate, duration]);
+  }, [isRunning, duration, onUpdate, onComplete]);
 
   const reset = useCallback(() => {
     startTimeRef.current = null;

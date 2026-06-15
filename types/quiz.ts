@@ -1,13 +1,10 @@
+export type OptionKey = 'A' | 'B' | 'C' | 'D';
+
 export interface Question {
   id: number;
   question: string;
-  options: {
-    A?: string;
-    B?: string;
-    C?: string;
-    D?: string;
-  };
-  correctAnswer: string;
+  options: Partial<Record<OptionKey, string>>;
+  correctAnswer: OptionKey;
   explanation: string;
   category: string;
   difficulty: string;
@@ -34,7 +31,7 @@ export interface GameState {
 export interface UserAnswer {
   questionIndex: number;
   question: Question;
-  selectedAnswer: string | null;
+  selectedAnswer: OptionKey | null;
   isCorrect: boolean;
   timeSpent: number;
 }

@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Question } from '@/types/quiz'
+import { OptionKey, Question } from '@/types/quiz'
+import { OPTION_KEYS } from '@/lib/quizOptions'
 
 interface JSONInputProps {
   onQuestionsLoaded: (questions: Question[]) => void
@@ -28,15 +29,16 @@ export default function JSONInput({ onQuestionsLoaded, onClose }: JSONInputProps
     if (!question.options || typeof question.options !== 'object') {
       return `Question ${index + 1}: Missing or invalid options object`
     }
-    const optionKeys = ['A', 'B', 'C', 'D']
-    const providedOptions = Object.keys(question.options as Record<string, unknown>).filter(key => optionKeys.includes(key))
+    const providedOptions = Object.keys(question.options as Record<string, unknown>).filter((key): key is OptionKey =>
+      OPTION_KEYS.includes(key as OptionKey)
+    )
     if (providedOptions.length < 2) {
       return `Question ${index + 1}: Must have at least 2 options`
     }
-    if (!question.correctAnswer || typeof question.correctAnswer !== 'string' || !optionKeys.includes(question.correctAnswer)) {
+    if (!question.correctAnswer || typeof question.correctAnswer !== 'string' || !OPTION_KEYS.includes(question.correctAnswer as OptionKey)) {
       return `Question ${index + 1}: Invalid correctAnswer (must be A, B, C, or D)`
     }
-    if (!providedOptions.includes(question.correctAnswer as string)) {
+    if (!providedOptions.includes(question.correctAnswer as OptionKey)) {
       return `Question ${index + 1}: correctAnswer "${question.correctAnswer}" not found in provided options`
     }
     if (!question.explanation || typeof question.explanation !== 'string') {
@@ -210,9 +212,10 @@ The JSON file must contain an array of question objects. Each question object mu
 3. **Unique IDs**: Each question must have a unique \`id\`
 4. **Valid Options**: At least 2 options required (A and B minimum)
 5. **Matching Answer**: \`correctAnswer\` must exist in \`options\`
-6. **Required Fields**: All fields listed above are mandatory
-7. **String Values**: All text fields must be non-empty strings
-8. **Difficulty Values**: Only "easy", "medium", or "hard" are accepted`
+6. **Display Order**: Option labels in JSON remain A-D, but the app remaps them into a random order at the start of each quiz pass
+7. **Required Fields**: All fields listed above are mandatory
+8. **String Values**: All text fields must be non-empty strings
+9. **Difficulty Values**: Only "easy", "medium", or "hard" are accepted`
 
   const handleCopyToClipboard = async () => {
     try {
@@ -301,6 +304,7 @@ The JSON file must contain an array of question objects. Each question object mu
                 <li>Each question must have a unique ID</li>
                 <li>At least 2 options required (A and B minimum)</li>
                 <li>correctAnswer must exist in options</li>
+                <li>Option labels in JSON remain A-D, then display in a random order for each quiz pass</li>
                 <li>All fields are mandatory</li>
                 <li>Difficulty must be exactly &quot;easy&quot;, &quot;medium&quot;, or &quot;hard&quot;</li>
               </ul>

@@ -2,8 +2,8 @@
 
 A gamified quiz application inspired by Duolingo's engaging learning experience. Transform any subject into an interactive, fun learning journey with streaks, lives, XP points, and achievements.
 
-![Next.js](https://img.shields.io/badge/Next.js-15.3.3-black?style=for-the-badge&logo=next.js)
-![React](https://img.shields.io/badge/React-19.0.0-61DAFB?style=for-the-badge&logo=react)
+![Next.js](https://img.shields.io/badge/Next.js-16.2.9-black?style=for-the-badge&logo=next.js)
+![React](https://img.shields.io/badge/React-19.2.7-61DAFB?style=for-the-badge&logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4.0-38B2AC?style=for-the-badge&logo=tailwind-css)
 
@@ -36,7 +36,7 @@ A gamified quiz application inspired by Duolingo's engaging learning experience.
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+- Node.js 20.9+
 - npm or yarn
 
 ### Installation
@@ -100,6 +100,8 @@ The app accepts questions in JSON format. Click the import button (⬇️) on th
 | `category` | string | Topic grouping |
 | `difficulty` | string | "easy", "medium", or "hard" |
 
+Answer labels in JSON stay `A`, `B`, `C`, and `D`. The app randomizes their display order at the start of each quiz pass while keeping `correctAnswer` attached to the same answer text.
+
 ### Example Categories
 
 You can create quizzes for any subject:
@@ -114,8 +116,8 @@ You can create quizzes for any subject:
 ## 🛠️ Development
 
 ### Tech Stack
-- **Frontend Framework**: Next.js 15.3.3 with App Router
-- **UI Library**: React 19
+- **Frontend Framework**: Next.js 16.2.9 with App Router
+- **UI Library**: React 19.2.7
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS 3.4.0
 - **Animations**: Framer Motion 12.18.1

@@ -8,19 +8,23 @@ interface BookmarkedQuestion extends Question {
 }
 
 export function useBookmarks() {
-  const [bookmarks, setBookmarks] = useState<BookmarkedQuestion[]>([]);
-
-  // Load bookmarks from localStorage on mount
-  useEffect(() => {
-    const savedBookmarks = localStorage.getItem('quiz-bookmarks');
-    if (savedBookmarks) {
-      try {
-        setBookmarks(JSON.parse(savedBookmarks));
-      } catch (error) {
-        console.error('Error loading bookmarks:', error);
-      }
+  const [bookmarks, setBookmarks] = useState<BookmarkedQuestion[]>(() => {
+    if (typeof window === 'undefined') {
+      return [];
     }
-  }, []);
+
+    const savedBookmarks = localStorage.getItem('quiz-bookmarks');
+    if (!savedBookmarks) {
+      return [];
+    }
+
+    try {
+      return JSON.parse(savedBookmarks);
+    } catch (error) {
+      console.error('Error loading bookmarks:', error);
+      return [];
+    }
+  });
 
   // Save bookmarks to localStorage whenever they change
   useEffect(() => {

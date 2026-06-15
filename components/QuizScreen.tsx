@@ -1,21 +1,22 @@
 "use client";
 
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { Question } from '@/types/quiz';
+import { OptionKey, Question } from '@/types/quiz';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import { useSound } from '@/hooks/useSound';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
+import { OPTION_KEYS } from '@/lib/quizOptions';
 
 interface QuizScreenProps {
   question: Question;
   questionNumber: number;
   totalQuestions: number;
-  onAnswer: (answer: string) => void;
+  onAnswer: (answer: OptionKey) => void;
   onNext: () => void;
   showFeedback: boolean;
   isCorrect: boolean | null;
-  selectedAnswer: string | null;
+  selectedAnswer: OptionKey | null;
   soundEnabled: boolean;
 }
 
@@ -30,8 +31,11 @@ const QuizScreen = React.memo(function QuizScreen({
   selectedAnswer,
   soundEnabled
 }: QuizScreenProps) {
-  const options = useMemo(() => 
-    Object.entries(question.options).filter(([, value]) => value),
+  const options = useMemo(
+    () =>
+      OPTION_KEYS
+        .map((letter) => [letter, question.options[letter]] as const)
+        .filter((option): option is readonly [OptionKey, string] => typeof option[1] === 'string' && option[1].length > 0),
     [question.options]
   );
   // const [isMobile, setIsMobile] = useState(false);

@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Question, GameState, UserAnswer, Score } from '@/types/quiz';
+import { Question, GameState, UserAnswer, Score, OptionKey } from '@/types/quiz';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useSound } from '@/hooks/useSound';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
+import { shuffleArray, shuffleQuestionOptions } from '@/lib/quizOptions';
 import Header from './Header';
 import StartScreen from './StartScreen';
 import QuizScreen from './QuizScreen';
@@ -40,7 +41,7 @@ export default function Quiz({ questions, onQuestionsChange }: QuizProps) {
   });
 
   const [showFeedback, setShowFeedback] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<OptionKey | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   
   const [scores, setScores] = useLocalStorage<Score[]>('networkQuizScores', []);
@@ -71,11 +72,11 @@ export default function Quiz({ questions, onQuestionsChange }: QuizProps) {
     const seenQuestions = questions.filter(q => seenQuestionIds.includes(q.id));
     
     // Shuffle both arrays separately
-    const shuffledUnseen = [...unseenQuestions].sort(() => Math.random() - 0.5);
-    const shuffledSeen = [...seenQuestions].sort(() => Math.random() - 0.5);
+    const shuffledUnseen = shuffleArray(unseenQuestions);
+    const shuffledSeen = shuffleArray(seenQuestions);
     
     // Prioritize unseen questions first, then seen questions
-    const prioritizedQuestions = [...shuffledUnseen, ...shuffledSeen];
+    const prioritizedQuestions = [...shuffledUnseen, ...shuffledSeen].map(shuffleQuestionOptions);
     
     setGameState(prev => ({
       ...prev,
@@ -107,7 +108,7 @@ export default function Quiz({ questions, onQuestionsChange }: QuizProps) {
     return 20;
   };
 
-  const handleAnswer = (answer: string | null) => {
+  const handleAnswer = (answer: OptionKey | null) => {
     const question = gameState.questions[gameState.currentQuestionIndex];
     const correct = answer === question.correctAnswer;
     const timeSpent = gameState.questionStartTime 

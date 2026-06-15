@@ -82,7 +82,7 @@ const ReviewScreen = React.memo(function ReviewScreen({ userAnswers, onBack }: R
                       <p className={`font-medium ${
                         answer.isCorrect ? 'text-[#58a700]' : 'text-[#ea2b2b]'
                       }`}>
-                        {answer.selectedAnswer}. {answer.question.options[answer.selectedAnswer as keyof typeof answer.question.options]}
+                        {answer.selectedAnswer}. {answer.question.options[answer.selectedAnswer]}
                       </p>
                     </div>
                   )}
@@ -92,7 +92,7 @@ const ReviewScreen = React.memo(function ReviewScreen({ userAnswers, onBack }: R
                     <div className="p-3 rounded-xl border-2 border-[#58cc02] bg-[#d7ffb8]">
                       <p className="text-sm text-[#afafaf] mb-1">Correct answer:</p>
                       <p className="font-medium text-[#58a700]">
-                        {answer.question.correctAnswer}. {answer.question.options[answer.question.correctAnswer as keyof typeof answer.question.options]}
+                        {answer.question.correctAnswer}. {answer.question.options[answer.question.correctAnswer]}
                       </p>
                     </div>
                   )}

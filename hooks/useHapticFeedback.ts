@@ -51,5 +51,5 @@ export function useHapticFeedback() {
     }
   }, []);
 
-  return { vibrate, isIOS: isIOSRef.current };
+  return { vibrate };
 }

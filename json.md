@@ -135,9 +135,10 @@ Here's a complete example with multiple questions:
 3. **Unique IDs**: Each question must have a unique `id`
 4. **Valid Options**: At least 2 options required (A and B minimum)
 5. **Matching Answer**: `correctAnswer` must exist in `options`
-6. **Required Fields**: All fields listed above are mandatory
-7. **String Values**: All text fields must be non-empty strings
-8. **Difficulty Values**: Only "easy", "medium", or "hard" are accepted
+6. **Display Order**: Option labels in JSON remain A-D, but the app remaps them into a random order at the start of each quiz pass
+7. **Required Fields**: All fields listed above are mandatory
+8. **String Values**: All text fields must be non-empty strings
+9. **Difficulty Values**: Only "easy", "medium", or "hard" are accepted
 
 ## Tips for Creating Questions
 
