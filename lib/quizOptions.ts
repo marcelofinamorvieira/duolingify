@@ -18,27 +18,81 @@ export function shuffleArray<T>(items: T[]): T[] {
   return shuffled;
 }
 
-export function shuffleQuestionOptions(question: Question): Question {
-  const populatedOptions = OPTION_KEYS
+function getPopulatedOptions(question: Question): PopulatedOption[] {
+  return OPTION_KEYS
     .map((key) => ({ key, value: question.options[key] }))
     .filter((option): option is PopulatedOption => typeof option.value === 'string' && option.value.length > 0);
+}
 
-  const shuffledOptions = shuffleArray(populatedOptions);
-  const remappedOptions: Question['options'] = {};
-  let remappedCorrectAnswer = question.correctAnswer;
+function buildBalancedTargetKeys(questionCount: number, optionCount: number): OptionKey[] {
+  const eligibleKeys = OPTION_KEYS.slice(0, optionCount);
+  const balancedKeys: OptionKey[] = [];
 
-  shuffledOptions.forEach((option, index) => {
-    const remappedKey = OPTION_KEYS[index];
-    remappedOptions[remappedKey] = option.value;
+  if (eligibleKeys.length === 0) {
+    return balancedKeys;
+  }
 
-    if (option.key === question.correctAnswer) {
-      remappedCorrectAnswer = remappedKey;
-    }
+  while (balancedKeys.length < questionCount) {
+    balancedKeys.push(...shuffleArray(eligibleKeys));
+  }
+
+  return shuffleArray(balancedKeys.slice(0, questionCount));
+}
+
+function shuffleQuestionOptions(question: Question, targetCorrectAnswer: OptionKey): Question {
+  const populatedOptions = getPopulatedOptions(question);
+  const correctOption = populatedOptions.find((option) => option.key === question.correctAnswer);
+
+  if (!correctOption) {
+    return {
+      ...question,
+      options: { ...question.options },
+    };
+  }
+
+  const eligibleKeys = OPTION_KEYS.slice(0, populatedOptions.length);
+  const wrongOptions = shuffleArray(populatedOptions.filter((option) => option.key !== question.correctAnswer));
+  const remappedOptions: Question['options'] = {
+    [targetCorrectAnswer]: correctOption.value,
+  };
+  const remainingKeys = shuffleArray(eligibleKeys.filter((key) => key !== targetCorrectAnswer));
+
+  wrongOptions.forEach((option, index) => {
+    remappedOptions[remainingKeys[index]] = option.value;
   });
 
   return {
     ...question,
     options: remappedOptions,
-    correctAnswer: remappedCorrectAnswer,
+    correctAnswer: targetCorrectAnswer,
   };
+}
+
+export function shuffleQuestionsForPass(questions: Question[]): Question[] {
+  const targetKeysByOptionCount = new Map<number, OptionKey[]>();
+  const groupSizes = new Map<number, number>();
+
+  questions.forEach((question) => {
+    const optionCount = getPopulatedOptions(question).length;
+    groupSizes.set(optionCount, (groupSizes.get(optionCount) ?? 0) + 1);
+  });
+
+  groupSizes.forEach((questionCount, optionCount) => {
+    targetKeysByOptionCount.set(optionCount, buildBalancedTargetKeys(questionCount, optionCount));
+  });
+
+  return questions.map((question) => {
+    const optionCount = getPopulatedOptions(question).length;
+    const targetKeys = targetKeysByOptionCount.get(optionCount);
+    const targetCorrectAnswer = targetKeys?.pop();
+
+    if (!targetCorrectAnswer) {
+      return {
+        ...question,
+        options: { ...question.options },
+      };
+    }
+
+    return shuffleQuestionOptions(question, targetCorrectAnswer);
+  });
 }

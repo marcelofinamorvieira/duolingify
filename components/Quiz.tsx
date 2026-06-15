@@ -5,7 +5,7 @@ import { Question, GameState, UserAnswer, Score, OptionKey } from '@/types/quiz'
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useSound } from '@/hooks/useSound';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
-import { shuffleArray, shuffleQuestionOptions } from '@/lib/quizOptions';
+import { shuffleArray, shuffleQuestionsForPass } from '@/lib/quizOptions';
 import Header from './Header';
 import StartScreen from './StartScreen';
 import QuizScreen from './QuizScreen';
@@ -76,7 +76,7 @@ export default function Quiz({ questions, onQuestionsChange }: QuizProps) {
     const shuffledSeen = shuffleArray(seenQuestions);
     
     // Prioritize unseen questions first, then seen questions
-    const prioritizedQuestions = [...shuffledUnseen, ...shuffledSeen].map(shuffleQuestionOptions);
+    const prioritizedQuestions = shuffleQuestionsForPass([...shuffledUnseen, ...shuffledSeen]);
     
     setGameState(prev => ({
       ...prev,
