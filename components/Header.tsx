@@ -12,9 +12,10 @@ interface HeaderProps {
   onClose?: () => void;
   title?: string;
   onBack?: () => void;
+  unlimitedLives?: boolean;
 }
 
-const Header = React.memo(function Header({ lives, streak, score, onClose, title, onBack }: HeaderProps) {
+const Header = React.memo(function Header({ lives, streak, score, onClose, title, onBack, unlimitedLives = false }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 right-0 bg-white border-b-2 border-[#e5e5e5] z-50">
       <div className="max-w-xl lg:max-w-5xl mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
@@ -40,26 +41,40 @@ const Header = React.memo(function Header({ lives, streak, score, onClose, title
           <h1 className="text-xl lg:text-2xl font-bold text-[#3c3c3c]">{title}</h1>
         ) : (
           <div className="flex items-center gap-2">
-            <motion.div 
-              className="flex items-center gap-1"
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-            >
-              {[...Array(3)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: i * 0.05, ...animationConfig.springFast }}
-                  style={withGPUAcceleration()}
-                  className={`w-7 h-7 ${i < lives ? '' : 'opacity-30'}`}
-                >
-                  <svg viewBox="0 0 24 24" fill={i < lives ? "#ff4b4b" : "#e5e5e5"}>
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                  </svg>
-                </motion.div>
-              ))}
-            </motion.div>
+            {unlimitedLives ? (
+              <motion.div
+                className="flex items-center gap-1 text-[#ff4b4b] font-bold"
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                aria-label="Unlimited lives"
+              >
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+                <span className="text-2xl leading-none">∞</span>
+              </motion.div>
+            ) : (
+              <motion.div
+                className="flex items-center gap-1"
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+              >
+                {[...Array(3)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ delay: i * 0.05, ...animationConfig.springFast }}
+                    style={withGPUAcceleration()}
+                    className={`w-7 h-7 ${i < lives ? '' : 'opacity-30'}`}
+                  >
+                    <svg viewBox="0 0 24 24" fill={i < lives ? "#ff4b4b" : "#e5e5e5"}>
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
           </div>
         )}
         

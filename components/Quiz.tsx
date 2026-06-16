@@ -43,6 +43,7 @@ export default function Quiz({ questions, onQuestionsChange }: QuizProps) {
   const [showFeedback, setShowFeedback] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<OptionKey | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [cheaterModeEnabled, setCheaterModeEnabled] = useState(false);
   
   const [scores, setScores] = useLocalStorage<Score[]>('networkQuizScores', []);
   const [seenQuestionIds, setSeenQuestionIds] = useLocalStorage<number[]>('networkQuizSeenQuestions', []);
@@ -149,7 +150,9 @@ export default function Quiz({ questions, onQuestionsChange }: QuizProps) {
       }
     } else {
       newStreak = 0;
-      newLives -= 1;
+      if (!cheaterModeEnabled) {
+        newLives -= 1;
+      }
       soundEffects.playFailure();
       vibrate('error');
     }
@@ -171,7 +174,7 @@ export default function Quiz({ questions, onQuestionsChange }: QuizProps) {
   };
 
   const nextQuestion = () => {
-    if (gameState.lives <= 0 || gameState.currentQuestionIndex >= gameState.questions.length - 1) {
+    if ((!cheaterModeEnabled && gameState.lives <= 0) || gameState.currentQuestionIndex >= gameState.questions.length - 1) {
       endQuiz();
     } else {
       setGameState(prev => ({
@@ -246,6 +249,23 @@ export default function Quiz({ questions, onQuestionsChange }: QuizProps) {
     }
     vibrate('light');
   };
+
+  const toggleCheaterMode = () => {
+    setCheaterModeEnabled((enabled) => {
+      const nextEnabled = !enabled;
+
+      if (nextEnabled) {
+        setGameState(prev => ({
+          ...prev,
+          lives: prev.maxLives
+        }));
+      }
+
+      return nextEnabled;
+    });
+    soundEffects.playClick();
+    vibrate('light');
+  };
   
   const resetQuestionProgress = () => {
     setSeenQuestionIds([]);
@@ -257,7 +277,7 @@ export default function Quiz({ questions, onQuestionsChange }: QuizProps) {
   const progress = `${gameState.questionsAnswered}/${gameState.totalQuestions}`;
 
   return (
-    <div className="h-screen bg-white flex flex-col lg:max-w-5xl lg:mx-auto lg:shadow-xl overflow-hidden">
+    <div className="relative h-screen bg-white flex flex-col lg:max-w-5xl lg:mx-auto lg:shadow-xl overflow-hidden">
       {currentScreen !== 'start' && (
         <Header
           lives={gameState.lives}
@@ -267,6 +287,7 @@ export default function Quiz({ questions, onQuestionsChange }: QuizProps) {
           onClose={currentScreen === 'review' ? undefined : () => setCurrentScreen('start')}
           onBack={currentScreen === 'review' ? () => setCurrentScreen('results') : undefined}
           title={currentScreen === 'review' ? 'Review Answers' : undefined}
+          unlimitedLives={currentScreen === 'quiz' && cheaterModeEnabled}
         />
       )}
 
@@ -325,6 +346,23 @@ export default function Quiz({ questions, onQuestionsChange }: QuizProps) {
             />
           )}
       </main>
+
+      {currentScreen === 'quiz' && (
+        <button
+          type="button"
+          aria-label="Cheater mode"
+          aria-pressed={cheaterModeEnabled}
+          title="Cheater mode"
+          onClick={toggleCheaterMode}
+          className={`absolute right-0 top-1/2 z-40 -translate-y-1/2 border border-r-0 rounded-l-lg px-2.5 py-4 text-xl font-bold transition-colors ${
+            cheaterModeEnabled
+              ? 'bg-[#58cc02] border-[#58a700] text-white'
+              : 'bg-white border-[#e5e5e5] text-[#afafaf] hover:text-[#3c3c3c] hover:bg-[#f7f7f7]'
+          }`}
+        >
+          ∞
+        </button>
+      )}
 
     </div>
   );
